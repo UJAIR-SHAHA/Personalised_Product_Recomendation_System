@@ -1,0 +1,373 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Recommendation System</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+</head>
+<style>
+     body {
+
+            background-color: hsl(0, 0%, 95%)
+        }
+        .navbar {
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .container {
+            margin-top: 50px;
+        }
+        .video-background {
+            width: 100%;
+            height: 400px; /* Set the height of the video here */
+            object-fit: cover; /* Ensure the video covers the entire container */
+        }
+        .nav-link:hover {
+            color: orange !important; /* Change text color on hover */
+        }
+        .nav-link.btn {
+            border-radius: 5px; /* Add rounded corners to buttons */
+        }
+
+        .modal-content {
+            background-color: #fff; /* Set modal content background color */
+            color: #000; /* Set modal content text color */
+        }
+        .modal-content.dark {
+            background-color: #000; /* Set modal content background color for dark theme */
+            color: #fff; /* Set modal content text color for dark theme */
+        }
+</style>
+<body>
+
+<!-- Navbar -->
+<nav class=" navbar navbar-expand-lg navbar-light bg-light" style="height:auto">
+  <h1 class=" navbar-brand mx-auto" style="webkit-text-size-adjust:100%; font-size:40px; font-weight: bold" href="#">Product Recommendation System</h1>
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+  <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+    <ul class="navbar-nav">
+      <li class="nav-item active">
+        <a class="nav-link" style="font-size:25px" href="#"><i class="fas fa-home"></i> Home</a>
+      </li>
+
+      <li class="nav-item active">
+        <a class="nav-link" style="font-size:25px" href="#" id="settingsLink"><i class="fas fa-cog"></i> Settings</a>
+      </li>
+
+        <li class="nav-item active">
+           {% if user_id %}
+        <a class="nav-link" style="font-size:25px" href="{{ url_for('logout') }}" id="Logout"><i class="fas fa-sign-out-alt"></i> Log Out</a>
+          {% else %}
+          <a class="nav-link" style="font-size:25px" href="{{ url_for('login') }}" id="Login"><i class="fas fa-sign-in-alt"></i> Log In</a>
+          {% endif %}
+      </li>
+
+<!--      <li class="nav-item">-->
+<!--        <a class="nav-link btn btn-outline-primary mr-2" style="font-size:25px" href="#" data-toggle="modal" data-target="#signupModal">Sign Up</a>-->
+<!--      </li>-->
+<!--      <li class="nav-item">-->
+<!--        <a class="nav-link btn btn-primary" style="font-size:25px"  href="#" data-toggle="modal" data-target="#signinModal">Sign In</a>-->
+<!--      </li>-->
+    </ul>
+  </div>
+</nav>
+
+<div id="carouselExampleControls" class="carousel slide" data-ride="carousel">
+  <div class="carousel-inner">
+    <div class="carousel-item active">
+      <img src="static/product_v.gif" alt="A cool GIF" height="500px" width=100% >
+    </div>
+  </div>
+</div>
+
+
+<div class="container mt-5">
+<!--        <h1 class="text-center mb-4">Welcome to the Main Page</h1>-->
+        {% if user_id %}
+        <p class="text-center" style="font-size:30px">Logged in as: <strong>{{ user_id }}</strong></p>
+        {% else %}
+        <p class="text-center text-danger" style="font-size:30px">No User logged in! Please Log in to Get personalised Recommendation</p>
+        {% endif %}
+    </div>
+
+
+
+<!-- Search Bar -->
+<div class="container" style="margin-top:30px;">
+    <form action="/recommendations" method="post" style="display:flex;">
+            <input type="text" class="form-control mr-2" style="  padding:10px; font-size:30px ;font-weight:bold; letter-spacing: 2px;" name="prod" placeholder="Search for products...">
+            <button class="btn btn-primary" id="search">Search</button>
+    </form>
+</div>
+
+
+
+
+
+<!--Trending Product recommendation-->
+<div class="container-fluid mt-10" style="padding: 40px">
+  <p class="text-center mb-10" style="padding: 20px; font-size: 60px; font-weight: bold; letter-spacing: 5px;">Trending Products</p>
+  <div id="trendingCarousel" class="carousel slide" data-ride="carousel" data-interval="2000">
+    <div class="carousel-inner">
+      {% for group_index in range(0, trending_products.shape[0], 3) %}
+      <div class="carousel-item {% if group_index == 0 %}active{% endif %}">
+        <div class="row">
+          {% for index in range(group_index, group_index + 3) %}
+          {% if index < trending_products.shape[0] %}
+          <div class="col-lg-4 col-md-6 col-sm-12 mb-4" style="padding: 40px">
+            <div class="card shadow custom-hover">
+              <img src="{{ random_product_image_urls[index] }}" class="card-img-top img-fluid" alt="{{ trending_products.iloc[index]['Name'] }}" style="height: 300px; width: 100%; object-fit: cover;">
+              <div class="card-body">
+                <h5 class="card-title" style="font-size: 25px">{{ truncate(trending_products.iloc[index]['product_name'], 30) }}</h5>
+                <p class="card-text" style="font-size: 20px">Brand: {{ trending_products.iloc[index]['product_brand'] }}</p>
+                <button type="button" class="btn btn-primary" style="font-size: 20px" data-toggle="modal" data-target="#productModal{{ index }}">Buy Now</button>
+                <button type="submit" class="btn btn-primary" style="font-size: 20px" onclick="viewSimilar('{{ trending_products.iloc[index]['product_id'] }}')">View Similar</button>
+              </div>
+            </div>
+          </div>
+          <!-- Modal for Product Details -->
+          <div class="modal fade" id="productModal{{ index }}" tabindex="-1" role="dialog" aria-labelledby="productModalLabel{{ index }}" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+              <div class="modal-content" style="width:700px">
+          <div class="modal-header">
+            <h4 class="modal-title" id="productModalLabel">{{ truncate(trending_products.iloc[index]['product_name'], 100) }}</h4>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <div class="row">
+              <div class="col-md-6" style="padding-left:10px;">
+                  <img src="{{ random_product_image_urls[index] }}" class="img-fluid" alt="{{ truncate(trending_products.iloc[index]['product_name'], 60) }}" style="width: 300px; height:200px;">
+              </div>
+              <div class="col-md-6" style="padding-left:20px; padding-bottom:20px; font-size:25px">
+                <p><strong>Brand:</strong> {{ trending_products.iloc[index]['product_brand'] }}</p>
+                <p><strong>Rating:</strong> {{ trending_products.iloc[index]['avg_rating'] | round(1) }}</p>
+                <p><strong>Brand:</strong> {{ trending_products.iloc[index]['rating_count'] }}</p>
+                <!-- Add other product details here -->
+                <!-- Example: -->
+                <p><strong>Price:</strong> {{ random_price }}</p>
+                <!-- Add more details as needed -->
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" style="font-size:20px" data-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-primary" style="font-size:20px" >Add to Cart</button>
+          </div>
+        </div>
+            </div>
+          </div>
+          {% endif %}
+          {% endfor %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+<!--    &lt;!&ndash; Carousel Controls &ndash;&gt;-->
+<!--    <a class="carousel-control-prev" href="#trendingCarousel" role="button" data-slide="prev">-->
+<!--      <span class="carousel-control-prev-icon" aria-hidden="true"></span>-->
+<!--      <span class="sr-only">Previous</span>-->
+<!--    </a>-->
+<!--    <a class="carousel-control-next" href="#trendingCarousel" role="button" data-slide="next">-->
+<!--      <span class="carousel-control-next-icon" aria-hidden="true"></span>-->
+<!--      <span class="sr-only">Next</span>-->
+<!--    </a>-->
+  </div>
+</div>
+
+
+{% if user_id and recommended_products.shape[0] > 0 %}
+<!--Suggested for user recommendations-->
+<!-- Products -->
+<div class="container-fluid mt-10" style="padding:20px">
+  <p class="text-center mb-10" style="  padding:20px; font-size:60px ;font-weight:bold; letter-spacing: 5px;">Suggested For You</p>
+  <div class="row mt-7">
+    {% for index, product in recommended_products.iterrows() %}
+    <div class="col-lg-3 col-md-4 col-sm-6 mb-4" style="padding: 40px">
+      <div class="card rounded shadow custom-hover">
+          <img src="{{ product['ImageURL'] }}" class="card-img-top img-fluid" alt="{{ product['Name'] }}" style="height: 300px; width: 100% object-fit: cover; ">
+        <div class="card-body">
+          <h5 class="card-title" style="font-size:25px">{{ truncate(product['Name'],20) }}</h5>
+<!--            <h5 class="card-title" style="font-size:25px">{{ truncate(product['product_id'],30) }}</h5>-->
+          <p class="card-text" style="font-size:20px">Brand: {{ product['Brand'] }}</p>
+          <button type="button" class="btn btn-primary" style="font-size:20px" data-toggle="modal" data-target="#productModal1{{ index }}">Buy Now</button>
+            <button  type="submit" class="btn btn-primary" id="View_Similar_Product" style="font-size:20px"
+            onclick="viewSimilar('{{ product['ProdID'] }}')">View Similar </button>
+        </div>
+      </div>
+    </div>
+    <!-- Modal -->
+    <div class="modal fade" style="justify-content: center;" id="productModal1{{ index }}" tabindex="-1" role="dialog" aria-labelledby="productModalLabel" aria-hidden="true">
+      <div class="modal-dialog" style="justify-content: center;">
+        <div class="modal-content" style="width:700px">
+          <div class="modal-header">
+            <h4 class="modal-title" id="productModalLabel1">{{ product['Name'] }}</h4>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <div class="row">
+              <div class="col-md-6" style="padding-left:10px;">
+                  <img src="{{ product['ImageURL'] }}" class="img-fluid" alt="{{ product['Name'] }}" style="width: 300px; height:200px;">
+              </div>
+              <div class="col-md-6" style="padding-left:20px; padding-bottom:20px; font-size:25px">
+                <p><strong>Brand:</strong> {{ product['Brand'] }}</p>
+                <!-- Add other product details here -->
+                <!-- Example: -->
+                <p><strong>Price:</strong> {{ random_price }}</p>
+                <!-- Add more details as needed -->
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" style="font-size:20px" data-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-primary" style="font-size:20px" >Add to Cart</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+<script>
+  // Handle click on Settings link to open the modal
+  document.getElementById('settingsLink').addEventListener('click', function() {
+    $('#settingsModal').modal('show');
+  });
+
+  // Handle theme apply button click
+  document.getElementById('applyTheme').addEventListener('click', function() {
+    // Get the selected theme value
+    var selectedTheme = document.querySelector('input[name="theme"]:checked').value;
+
+    // Apply the selected theme
+    if (selectedTheme === 'black') {
+      document.body.style.backgroundColor = 'black';
+      document.body.style.color = 'white';
+    } else if (selectedTheme === 'green') {
+      document.body.style.backgroundColor = 'green';
+      document.body.style.color = 'white';
+    } else {
+      // Default theme
+      document.body.style.backgroundColor = '#f8f9fa';
+      document.body.style.color = 'black';
+    }
+
+    // Close the modal
+    $('#settingsModal').modal('hide');
+  });
+
+  // Handle zoom in button click
+  document.getElementById('zoomIn').addEventListener('click', function() {
+    document.body.style.zoom = "115%";
+  });
+
+  // Handle zoom out button click
+  document.getElementById('zoomOut').addEventListener('click', function() {
+    document.body.style.zoom = "100%";
+  });
+</script>
+
+
+
+<!--footer-->
+
+<!--<div class="container my-5">-->
+
+  <footer class="bg-dark text-center text-white">
+  <!-- Grid container -->
+  <div class="container p-4 pb-0">
+    <!-- Section: Social media -->
+    <section class="mb-4">
+      <!-- Facebook -->
+      <a
+        class="btn btn-primary btn-floating m-1"
+        style="background-color: #3b5998;"
+        href="#!"
+        role="button"
+        ><i class="fab fa-facebook-f"></i
+      ></a>
+
+      <!-- Twitter -->
+      <a
+        class="btn btn-primary btn-floating m-1"
+        style="background-color: #55acee;"
+        href="#!"
+        role="button"
+        ><i class="fab fa-twitter"></i
+      ></a>
+
+      <!-- Google -->
+      <a
+        class="btn btn-primary btn-floating m-1"
+        style="background-color: #dd4b39;"
+        href="#!"
+        role="button"
+        ><i class="fab fa-google"></i
+      ></a>
+
+      <!-- Instagram -->
+      <a
+        class="btn btn-primary btn-floating m-1"
+        style="background-color: #ac2bac;"
+        href="#!"
+        role="button"
+        ><i class="fab fa-instagram"></i
+      ></a>
+
+      <!-- Linkedin -->
+      <a
+        class="btn btn-primary btn-floating m-1"
+        style="background-color: #0082ca;"
+        href="https://www.linkedin.com/in/ujair-shaha-1b258a205/"
+        role="button"
+        ><i class="fab fa-linkedin-in"></i
+      ></a>
+      <!-- Github -->
+      <a
+        class="btn btn-primary btn-floating m-1"
+        style="background-color: #333333;"
+        href="#"
+        role="button"
+        ><i class="fab fa-github"></i
+      ></a>
+    </section>
+    <!-- Section: Social media -->
+  </div>
+  <!-- Grid container -->
+
+  <!-- Copyright -->
+  <div class="text-center p-3" style="background-color: rgba(0, 0, 0, 0.2);">
+    © 2025 Copyright:
+    <a class="text-white" href="#">Ecommerce Recommendation System by Uzair </a>
+  </div>
+  <!-- Copyright -->
+</footer>
+
+<!--</div>-->
+<!-- End of .container -->
+
+
+
+</body>
+</html>
