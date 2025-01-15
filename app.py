@@ -7,6 +7,8 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.decomposition import TruncatedSVD
 
+
+# creating Flask App
 app = Flask(__name__)
 load_dotenv()
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", "fallback_key_for_dev")
