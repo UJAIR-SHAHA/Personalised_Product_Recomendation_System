@@ -119,14 +119,14 @@ def user_based_recommendation(user_id, top_n=12):
 
 
 
-    if user_id not in user_item_matrix.index:
-        print(f"user_id {user_id} not found in user_item_matrix")
-    else:
-        print(f"user_id {user_id} found in user_item_matrix")
-
-    print("Type of user_id in user_item_matrix:", type(user_item_matrix.index[0]))
-    print("Type of user_id from session:", type(user_id))
-    print("Ratings for user:", user_item_matrix.loc[user_id])
+    # if user_id not in user_item_matrix.index:
+    #     print(f"user_id {user_id} not found in user_item_matrix")
+    # else:
+    #     print(f"user_id {user_id} found in user_item_matrix")
+    #
+    # print("Type of user_id in user_item_matrix:", type(user_item_matrix.index[0]))
+    # print("Type of user_id from session:", type(user_id))
+    # print("Ratings for user:", user_item_matrix.loc[user_id])
     # Get the list of users that are most similar to the target user
     similar_users = user_similarity_df.loc[str(user_id)].sort_values(ascending=False)[1:].head(top_n)
 

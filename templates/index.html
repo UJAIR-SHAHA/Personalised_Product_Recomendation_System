@@ -83,16 +83,16 @@
   </div>
 </nav>
 
-<div id="carouselExampleControls" class="carousel slide" data-ride="carousel">
-  <div class="carousel-inner">
-    <div class="carousel-item active">
-      <video class="video-background" autoplay loop muted>
-        <source src="static/v.mp4" type="video/mp4">
-        Your browser does not support the video tag.
-      </video>
-    </div>
-  </div>
-</div>
+<!--<div id="carouselExampleControls" class="carousel slide" data-ride="carousel">-->
+<!--  <div class="carousel-inner">-->
+<!--    <div class="carousel-item active">-->
+<!--      <video class="video-background" autoplay loop muted>-->
+<!--        <source src="static/v.mp4" type="video/mp4">-->
+<!--        Your browser does not support the video tag.-->
+<!--      </video>-->
+<!--    </div>-->
+<!--  </div>-->
+<!--</div>-->
 
 
 <div class="container mt-5">
@@ -178,15 +178,15 @@
       </div>
       {% endfor %}
     </div>
-<!--    &lt;!&ndash; Carousel Controls &ndash;&gt;-->
-<!--    <a class="carousel-control-prev" href="#trendingCarousel" role="button" data-slide="prev">-->
-<!--      <span class="carousel-control-prev-icon" aria-hidden="true"></span>-->
-<!--      <span class="sr-only">Previous</span>-->
-<!--    </a>-->
-<!--    <a class="carousel-control-next" href="#trendingCarousel" role="button" data-slide="next">-->
-<!--      <span class="carousel-control-next-icon" aria-hidden="true"></span>-->
-<!--      <span class="sr-only">Next</span>-->
-<!--    </a>-->
+    <!-- Carousel Controls -->
+    <a class="carousel-control-prev" href="#trendingCarousel" role="button" data-slide="prev">
+      <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+      <span class="sr-only">Previous</span>
+    </a>
+    <a class="carousel-control-next" href="#trendingCarousel" role="button" data-slide="next">
+      <span class="carousel-control-next-icon" aria-hidden="true"></span>
+      <span class="sr-only">Next</span>
+    </a>
   </div>
 </div>
 
@@ -194,8 +194,8 @@
 {% if user_id and recommended_products.shape[0] > 0 %}
 <!--Suggested for user recommendations-->
 <!-- Products -->
-<div class="container mt-10" style="padding:10px">
-  <p class="text-center mb-10" style="  padding:10px; font-size:40px ;font-weight:bold; letter-spacing: 5px;">Suggested For You</p>
+<div class="container mt-10">
+  <p class="text-center mb-10" style="  padding:10px; font-size:40px ;font-weight:bold; letter-spacing: 3px;">Suggested For You</p>
   <div class="row mt-7">
     {% for index, product in recommended_products.iterrows() %}
     <div class="col-lg-3 col-md-4 col-sm-6 mb-4" style="padding: 20px">
@@ -214,9 +214,9 @@
     <!-- Modal -->
     <div class="modal fade" style="justify-content: center;" id="productModal1{{ index }}" tabindex="-1" role="dialog" aria-labelledby="productModalLabel" aria-hidden="true">
       <div class="modal-dialog" style="justify-content: center;">
-        <div class="modal-content" style="width:700px">
+        <div class="modal-content" style="width:400px">
           <div class="modal-header">
-            <h4 class="modal-title" id="productModalLabel1">{{ product['Name'] }}</h4>
+            <h5 class="modal-title" id="productModalLabel1">{{ product['Name'] }}</h5>
             <button type="button" class="close" data-dismiss="modal" aria-label="Close">
               <span aria-hidden="true">&times;</span>
             </button>
@@ -224,9 +224,9 @@
           <div class="modal-body">
             <div class="row">
               <div class="col-md-6" style="padding-left:10px;">
-                  <img src="{{ product['ImageURL'] }}" class="img-fluid" alt="{{ product['Name'] }}" style="width: 300px; height:200px;">
+                  <img src="{{ product['ImageURL'] }}" class="img-fluid" alt="{{ product['Name'] }}" style="width: 300px; height:150px;">
               </div>
-              <div class="col-md-6" style="padding-left:20px; padding-bottom:20px; font-size:25px">
+              <div class="col-md-6" style="padding-left:20px; padding-bottom:20px; font-size:20px">
                 <p><strong>Brand:</strong> {{ product['Brand'] }}</p>
                 <!-- Add other product details here -->
                 <!-- Example: -->

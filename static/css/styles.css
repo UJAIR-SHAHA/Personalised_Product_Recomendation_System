@@ -41,4 +41,10 @@
     }
 
 
+  .carousel-control-prev-icon {
+    background-image: url('data:image/svg+xml;charset=utf8,%3Csvg xmlns%3D"http://www.w3.org/2000/svg" fill%3D"black" viewBox%3D"0 0 16 16"%3E%3Cpath d%3D"M11.354 1.354a.5.5 0 0 1 0 .707L5.707 8l5.647 5.646a.5.5 0 0 1-.708.708l-6-6a.5.5 0 0 1 0-.708l6-6a.5.5 0 0 1 .708 0z"/%3E%3C/svg%3E');
+  }
+
+
+
 
