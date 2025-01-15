@@ -5,7 +5,6 @@ import os
 from dotenv import load_dotenv
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
-from sklearn.decomposition import TruncatedSVD
 
 
 # creating Flask App
@@ -23,13 +22,13 @@ tfidf_matrix = tfidf_vectorizer.fit_transform(product_data['Tags'])
 # Generate user-item matrix (assuming product_data contains user-product interactions)
 user_item_matrix = product_data.pivot_table(index='user_id', columns='ProdID', values='Rating', fill_value=0)
 
-# Train the SVD model
-# Step 3: Apply SVD for Collaborative Filtering
-svd = TruncatedSVD(n_components=50)
-user_factors = svd.fit_transform(user_item_matrix)
-item_factors = svd.components_.T
+# # Train the SVD model
+# # Step 3: Apply SVD for Collaborative Filtering
+# svd = TruncatedSVD(n_components=50)
+# user_factors = svd.fit_transform(user_item_matrix)
+# item_factors = svd.components_.T
 
-product_data.head()
+# product_data.head()
 
 # List of predefined images
 random_image_urls = [
@@ -284,8 +283,8 @@ def View_Similar_Product():
         brand_image_map.get(product['Brand'], "static/img/img_1.png")
         for _, product in Recommendations.iterrows()
     ]
-    print(Recommendations)
-    print(random_product_image_urls_1)
+    # print(Recommendations)
+    # print(random_product_image_urls_1)
 
     # Random prices (or replace with dynamic data)
     price = [40, 50, 60, 70, 100, 122, 106, 50, 30, 50]
@@ -302,4 +301,4 @@ def View_Similar_Product():
 
 # Run the Flask app
 if __name__ == "__main__":
-    app.run()
+    app.run(debug=True)

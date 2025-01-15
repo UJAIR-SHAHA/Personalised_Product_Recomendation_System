@@ -33,7 +33,7 @@
   }
 
   footer .fab {
-    font-size: 20px; /* Increase the size of the icon */
+    font-size: 10px; /* Increase the size of the icon */
   }
 
   .content::-webkit-scrollbar {

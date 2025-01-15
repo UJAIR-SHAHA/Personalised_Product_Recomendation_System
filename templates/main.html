@@ -45,18 +45,18 @@
 
 <!-- Navbar -->
 <nav class="navbar navbar-expand-lg navbar-light bg-light" style="height:100px">
-  <a class="navbar-brand mx-auto" style="font-size:40px; font-weight: bold" href="#">Ecommerce Recommendation System</a>
+  <a class="navbar-brand mx-auto" style="font-size:20px; font-weight: bold" href="#">Ecommerce Recommendation System</a>
   <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
     <span class="navbar-toggler-icon"></span>
   </button>
   <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
     <ul class="navbar-nav">
       <li class="nav-item active">
-        <a class="nav-link" style="font-size:25px" href="index"><i class="fas fa-home"></i> Home</a>
+        <a class="nav-link" style="font-size:20px" href="index"><i class="fas fa-home"></i> Home</a>
       </li>
 
       <li class="nav-item active">
-        <a class="nav-link" style="font-size:25px" href="#" id="settingsLink"><i class="fas fa-cog"></i> Settings</a>
+        <a class="nav-link" style="font-size:20px" href="#" id="settingsLink"><i class="fas fa-cog"></i> Settings</a>
       </li>
 <!--      <li class="nav-item">-->
 <!--        <a class="nav-link btn btn-outline-primary mr-2" style="font-size:25px" href="#" data-toggle="modal" data-target="#signupModal">Sign Up</a>-->
@@ -85,17 +85,17 @@
 <!--trending recommendations-->
 <!-- Products -->
 <div class="container-fluid mt-10" style="padding:20px">
-  <p class="text-center mb-10" style="  padding:20px; font-size:60px ;font-weight:bold; letter-spacing: 5px;">Available Searched Products</p>
+  <p class="text-center mb-10" style="  padding:20px; font-size:40px ;font-weight:bold; letter-spacing: 5px;">Available Searched Products</p>
   <div class="row mt-7">
     {% for index, product in content_based_rec.iterrows() %}
     <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
       <div class="card rounded shadow custom-hover">
-          <img src = "{{ product['ImageURL'] }}" class="card-img-top img-fluid" alt="{{ product['Name'] }}" style="height: 300px; width: 100% object-fit: cover; ">
+          <img src = "{{ product['ImageURL'] }}" class="card-img-top img-fluid" alt="{{ product['Name'] }}" style="height: 250px; width: 100% object-fit: cover; ">
         <div class="card-body">
-          <h5 class="card-title" style="font-size:25px">{{ truncate(product['Name'],30) }}</h5>
-          <p class="card-text" style="font-size:20px">Brand: {{ product['Brand'] }}</p>
-          <button type="button" class="btn btn-primary" style="font-size:20px" data-toggle="modal" data-target="#productModal{{ index }}">Buy Now</button>
-            <button  type="submit" class="btn btn-primary" id="View_Similar_Product" style="font-size:20px"
+          <h5 class="card-title" style="font-size:20px">{{ truncate(product['Name'],15) }}</h5>
+          <p class="card-text" style="font-size:15px">Brand: {{ product['Brand'] }}</p>
+          <button type="button" class="btn btn-primary" style="font-size:15px" data-toggle="modal" data-target="#productModal{{ index }}">Buy Now</button>
+            <button  type="submit" class="btn btn-primary" id="View_Similar_Product" style="font-size:15px"
             onclick="viewSimilar('{{ product['ProdID'] }}')">View Similar </button>
         </div>
       </div>
