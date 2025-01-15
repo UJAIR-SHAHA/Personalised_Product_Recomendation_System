@@ -26,7 +26,7 @@
   footer .btn {
     min-width: 50px;  /* Increase the minimum width of the button */
     padding: 15px; /* Adjust padding to make the buttons larger */
-    font-size: 25px; /* Increase font size of icons */
+    font-size: 20px; /* Increase font size of icons */
     display: inline-flex; /* Ensure the icon is aligned properly */
     justify-content: center;
     align-items: center;
