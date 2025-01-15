@@ -1,3 +1,7 @@
 .env
 .ipynb_checkpoints/
 myenv/
+<<<<<<< HEAD
+=======
+.idea/
+>>>>>>> 1fcae7167e4e6c5defd0cb943a5807336f2bba39
