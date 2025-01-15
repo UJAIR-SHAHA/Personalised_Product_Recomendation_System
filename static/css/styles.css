@@ -1,0 +1,44 @@
+.custom-hover {
+    transition: box-shadow 0.3s ease-in-out, transform 0.3s ease-in-out;
+}
+
+.custom-hover:hover {
+    box-shadow: 0 16px 16px rgba(0, 0, 0, 0.4); /* Dark shadow on hover */
+    transform: translateY(-8px);
+    /* Subtle lift effect */
+}
+
+.card {
+    border-radius: 30px; /* Rounded corners */
+}
+
+      footer {
+    margin-top: auto;
+    flex-shrink: 0;  /* Prevent shrinking */
+  }
+
+  /* Ensure that footer content has proper spacing */
+  footer .container {
+    padding: 20px; /* Ensure enough space inside the footer */
+  }
+
+  /* Style for social media buttons */
+  footer .btn {
+    min-width: 50px;  /* Increase the minimum width of the button */
+    padding: 15px; /* Adjust padding to make the buttons larger */
+    font-size: 25px; /* Increase font size of icons */
+    display: inline-flex; /* Ensure the icon is aligned properly */
+    justify-content: center;
+    align-items: center;
+  }
+
+  footer .fab {
+    font-size: 20px; /* Increase the size of the icon */
+  }
+
+  .content::-webkit-scrollbar {
+      display: none;
+    }
+
+
+
