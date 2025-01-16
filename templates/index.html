@@ -15,42 +15,10 @@
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 
 </head>
-<style>
-     body {
-
-            background-color: hsl(0, 0%, 95%)
-        }
-        .navbar {
-            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
-        }
-        .container {
-            margin-top: 50px;
-        }
-        .video-background {
-            width: 100%;
-            height: 400px; /* Set the height of the video here */
-            object-fit: cover; /* Ensure the video covers the entire container */
-        }
-        .nav-link:hover {
-            color: orange !important; /* Change text color on hover */
-        }
-        .nav-link.btn {
-            border-radius: 5px; /* Add rounded corners to buttons */
-        }
-
-        .modal-content {
-            background-color: #fff; /* Set modal content background color */
-            color: #000; /* Set modal content text color */
-        }
-        .modal-content.dark {
-            background-color: #000; /* Set modal content background color for dark theme */
-            color: #fff; /* Set modal content text color for dark theme */
-        }
-</style>
 <body>
 
 <!-- Navbar -->
-<nav class=" navbar navbar-expand-lg navbar-light bg-light" style="height:auto">
+<nav class=" navbar navbar-expand-lg navbar-light bg-light" style=" width:auto; height:auto;">
   <h1 class=" navbar-brand mx-auto" style="webkit-text-size-adjust:100%; font-size:20px; font-weight: bold" href="#">Product Recommendation System</h1>
   <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
     <span class="navbar-toggler-icon"></span>
@@ -95,7 +63,7 @@
 <!--</div>-->
 
 
-<div class="container mt-5">
+<div class="container1" style="width:auto; padding:auto;">
 <!--        <h1 class="text-center mb-4">Welcome to the Main Page</h1>-->
         {% if user_id %}
         <p class="text-center" style="font-size:20px">Logged in as: <strong>{{ user_id }}</strong></p>
@@ -107,7 +75,7 @@
 
 
 <!-- Search Bar -->
-<div class="container" style="margin-top:30px;">
+<div class="container1 text-center" style="margin-top:30px; width:auto; padding:40px;">
     <form action="/recommendations" method="post" style="display:flex;">
             <input type="text" class="form-control mr-2" style="  padding:10px; font-size:20px ;font-weight:bold; letter-spacing: 2px;" name="prod" placeholder="Search for products...">
             <button class="btn btn-primary" id="search">Search</button>
@@ -119,7 +87,7 @@
 
 
 <!--Trending Product recommendation-->
-<div class="container mt-10" style="padding: 30px">
+<div class="container1 mt-10" style="padding: 20px; width:auto;">
   <p class="text-center mb-10" style="padding: 20px; font-size: 35px; font-weight: bold; letter-spacing: 3px;">Trending Products </p>
   <div id="trendingCarousel" class="carousel slide" data-ride="carousel" data-interval="2000">
     <div class="carousel-inner">
@@ -144,7 +112,7 @@
             <div class="modal-dialog" role="document">
               <div class="modal-content" style="width:400px">
           <div class="modal-header">
-            <h4 class="modal-title" id="productModalLabel">{{ truncate(trending_products.iloc[index]['product_name'], 100) }}</h4>
+            <h4 class="modal-title" style="font-size:20px" id="productModalLabel">{{ truncate(trending_products.iloc[index]['product_name'], 100) }}</h4>
             <button type="button" class="close" data-dismiss="modal" aria-label="Close">
               <span aria-hidden="true">&times;</span>
             </button>
@@ -154,7 +122,7 @@
               <div class="col-md-6" style="padding-left:10px;">
                   <img src="{{ random_product_image_urls[index] }}" class="img-fluid" alt="{{ truncate(trending_products.iloc[index]['product_name'], 60) }}" style="width: 300px; height:150px;">
               </div>
-              <div class="col-md-6" style="padding-left:20px; padding-bottom:20px; font-size:10px">
+              <div class="col-md-6" style="padding-left:20px; padding-bottom:20px; font-size:15px">
                 <p><strong>Brand:</strong> {{ trending_products.iloc[index]['product_brand'] }}</p>
                 <p><strong>Rating:</strong> {{ trending_products.iloc[index]['avg_rating'] | round(1) }}</p>
                 <p><strong>Brand:</strong> {{ trending_products.iloc[index]['rating_count'] }}</p>
@@ -179,14 +147,14 @@
       {% endfor %}
     </div>
     <!-- Carousel Controls -->
-    <a class="carousel-control-prev" href="#trendingCarousel" role="button" data-slide="prev">
-      <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-      <span class="sr-only">Previous</span>
-    </a>
-    <a class="carousel-control-next" href="#trendingCarousel" role="button" data-slide="next">
-      <span class="carousel-control-next-icon" aria-hidden="true"></span>
-      <span class="sr-only">Next</span>
-    </a>
+{#<!--    <a class="carousel-control-prev" href="#trendingCarousel" role="button" data-slide="prev">-->
+<!--      <span class="carousel-control-prev-icon" aria-hidden="true"></span>-->
+<!--      <span class="sr-only">Previous</span>-->
+<!--    </a>-->
+<!--    <a class="carousel-control-next" href="#trendingCarousel" role="button" data-slide="next">-->
+<!--      <span class="carousel-control-next-icon" aria-hidden="true"></span>-->
+<!--      <span class="sr-only">Next</span>-->
+<!--    </a>-->#}
   </div>
 </div>
 
@@ -235,9 +203,9 @@
               </div>
             </div>
           </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" style="font-size:20px" data-dismiss="modal">Close</button>
-            <button type="button" class="btn btn-primary" style="font-size:20px" >Add to Cart</button>
+          <div class="modal-footer" style="font-size:10px">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-primary"  >Add to Cart</button>
           </div>
         </div>
       </div>
@@ -297,11 +265,11 @@
 
 <!--<div class="container my-5">-->
 
-  <footer class="bg-dark text-center text-white">
+  <footer class="footer-container bg-dark text-center text-white mt-1">
   <!-- Grid container -->
-  <div class="container p-4 pb-0">
+  <div class="footer-container">
     <!-- Section: Social media -->
-    <section class="mb-4">
+    <section class="footer-container">
       <!-- Facebook -->
       <a
         class="btn btn-primary btn-floating m-1"
@@ -360,7 +328,7 @@
   <!-- Grid container -->
 
   <!-- Copyright -->
-  <div class="text-center p-3" style="background-color: rgba(0, 0, 0, 0.2);">
+  <div class="footer-container text-center" style="font-size:auto; background-color: rgba(0, 0, 0, 0.2);">
     © 2025 Copyright:
     <a class="text-white" href="#">Ecommerce Recommendation System by Uzair </a>
   </div>
