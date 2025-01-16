@@ -1,12 +1,20 @@
+body{
+background-color:lightgrey !important;
+}
+
+
+
+
 .custom-hover {
     transition: box-shadow 0.3s ease-in-out, transform 0.3s ease-in-out;
 }
 
 .custom-hover:hover {
-    box-shadow: 0 16px 16px rgba(0, 0, 0, 0.4); /* Dark shadow on hover */
+    box-shadow: 0 16px 16px rgba(0, 0, 0, 0.9); /* Dark shadow on hover */
     transform: translateY(-8px);
     /* Subtle lift effect */
 }
+
 
 .card {
     border-radius: 30px; /* Rounded corners */
@@ -42,14 +50,10 @@
     }
 
 
-  .carousel-control-prev-icon {
-    background-image: url('data:image/svg+xml;charset=utf8,%3Csvg xmlns%3D"http://www.w3.org/2000/svg" fill%3D"black" viewBox%3D"0 0 16 16"%3E%3Cpath d%3D"M11.354 1.354a.5.5 0 0 1 0 .707L5.707 8l5.647 5.646a.5.5 0 0 1-.708.708l-6-6a.5.5 0 0 1 0-.708l6-6a.5.5 0 0 1 .708 0z"/%3E%3C/svg%3E');
-  }
-
   .navbar {
       width: 80%; /* Adjust the percentage or use a fixed width like '500px' */
       margin: 0 auto; /* Center the navbar */
-      background-color: #333;
+      background-color: white;
       color: white;
       padding: 10px;
       display: flex;
@@ -57,11 +61,6 @@
       box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
     }
 
-    body {
-
-            background-color: hsl(0, 0%, 95%);
-
-        }
 
     .container1 {
     padding 30px;

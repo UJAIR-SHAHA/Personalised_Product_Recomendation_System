@@ -8,22 +8,21 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
-    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
-
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
 
 </head>
 <body>
 
 <!-- Navbar -->
-<nav class=" navbar navbar-expand-lg navbar-light bg-light" style=" width:auto; height:auto;">
-  <h1 class=" navbar-brand mx-auto" style="webkit-text-size-adjust:100%; font-size:20px; font-weight: bold" href="#">Product Recommendation System</h1>
+<nav class=" navbar navbar-expand-lg navbar-dark bg-dark text-white" style=" width:auto; height:auto;">
+  <h1 class=" navbar-brand mx-auto" style="webkit-text-size-adjust:100%; font-size:20px; font-weight: bold">Product Recommendation System</h1>
   <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
     <span class="navbar-toggler-icon"></span>
   </button>
-  <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+  <div class="collapse navbar-collapse justify-content-end text-white" id="navbarNav">
     <ul class="navbar-nav">
       <li class="nav-item active">
         <a class="nav-link" style="font-size:20px" href="#"><i class="fas fa-home"></i> Home</a>
@@ -35,9 +34,9 @@
 
         <li class="nav-item active">
            {% if user_id %}
-        <a class="nav-link" style="font-size:20px" href="{{ url_for('logout') }}" id="Logout"><i class="fas fa-sign-out-alt"></i> Log Out</a>
+        <a class="nav-link " style="font-size:20px " href="{{ url_for('logout') }}" id="Logout"><i class="fas fa-sign-out-alt"></i> Log Out</a>
           {% else %}
-          <a class="nav-link" style="font-size:20px" href="{{ url_for('login') }}" id="Login"><i class="fas fa-sign-in-alt"></i> Log In</a>
+          <a class="nav-link " style="font-size:20px" href="{{ url_for('login') }}" id="Login"><i class="fas fa-sign-in-alt"></i> Log In</a>
           {% endif %}
       </li>
 
@@ -51,24 +50,12 @@
   </div>
 </nav>
 
-<!--<div id="carouselExampleControls" class="carousel slide" data-ride="carousel">-->
-<!--  <div class="carousel-inner">-->
-<!--    <div class="carousel-item active">-->
-<!--      <video class="video-background" autoplay loop muted>-->
-<!--        <source src="static/v.mp4" type="video/mp4">-->
-<!--        Your browser does not support the video tag.-->
-<!--      </video>-->
-<!--    </div>-->
-<!--  </div>-->
-<!--</div>-->
-
-
-<div class="container1" style="width:auto; padding:auto;">
+<div class="container1" style="width:auto; padding:auto; margin-top:20px">
 <!--        <h1 class="text-center mb-4">Welcome to the Main Page</h1>-->
         {% if user_id %}
-        <p class="text-center" style="font-size:20px">Logged in as: <strong>{{ user_id }}</strong></p>
+        <p class="text-center" style="font-size:30px">Logged in as: <strong>{{ user_id }}</strong></p>
         {% else %}
-        <p class="text-center text-danger" style="font-size:30px">No User logged in! Please Log in to Get personalised Recommendation</p>
+        <p class="text-center text-danger" style="font-weight:bold; font-size:30px">No User logged in! Please Log in to Get personalised Recommendation</p>
         {% endif %}
     </div>
 
@@ -96,9 +83,9 @@
         <div class="row">
           {% for index in range(group_index, group_index + 3) %}
           {% if index < trending_products.shape[0] %}
-          <div class="col-lg-4 col-md-6 col-sm-12 mb-4" style="padding: 30px">
+          <div class="col-lg-4 col-md-6 col-sm-12 mb-1" style="padding: 30px">
             <div class="card shadow custom-hover">
-              <img src="{{ random_product_image_urls[index] }}" class="card-img-top img-fluid" alt="{{ trending_products.iloc[index]['Name'] }}" style="height: 250px; width: 100%; object-fit: cover;">
+              <img src="{{ random_product_image_urls[index] }}" class="card-img-top img-fluid" alt="{{ trending_products.iloc[index]['Name'] }}" style="height: 250px; width: auto; object-fit: cover;">
               <div class="card-body">
                 <h5 class="card-title" style="font-size: 20px">{{ truncate(trending_products.iloc[index]['product_name'], 30) }}</h5>
                 <p class="card-text" style="font-size: 15px">Brand: {{ trending_products.iloc[index]['product_brand'] }}</p>
@@ -162,7 +149,7 @@
 {% if user_id and recommended_products.shape[0] > 0 %}
 <!--Suggested for user recommendations-->
 <!-- Products -->
-<div class="container mt-10">
+<div class="container1 mt-10" style="padding:40px">
   <p class="text-center mb-10" style="  padding:10px; font-size:40px ;font-weight:bold; letter-spacing: 3px;">Suggested For You</p>
   <div class="row mt-7">
     {% for index, product in recommended_products.iterrows() %}
