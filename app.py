@@ -2,6 +2,7 @@ from flask import Flask, request, render_template, url_for, redirect, session
 import pandas as pd
 import random
 import os
+import numpy as np
 from dotenv import load_dotenv
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
@@ -83,27 +84,21 @@ def search_products(product_data, query, top_n=10):
     return recommended_products[['ProdID', 'Name', 'Brand', 'Category', 'ImageURL']].drop_duplicates(subset='ProdID')
 
 
-def recommend_content_based(product_id, product_data, top_n=15):
+def recommend_content_based(product_id, product_data, tfidf_matrix, top_n=15):
     # Get the index of the product
     idx = product_data[product_data['ProdID'] == product_id].index[0]
 
-    cosine_sim = cosine_similarity(tfidf_matrix, tfidf_matrix)
+    # Calculate cosine similarity for the target product with all others
+    target_vector = tfidf_matrix[idx]
+    sim_scores = cosine_similarity(target_vector, tfidf_matrix).flatten()
 
-    # Get the similarity scores for the product with all other products
-    sim_scores = list(enumerate(cosine_sim[idx]))
-
-    # Sort the products based on similarity scores in descending order
-    sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)
-
-    # Get the top N most similar products (excluding the product itself)
-    sim_scores = sim_scores[1:top_n + 1]
-
-    # Get the product indices and corresponding similarity scores
-    product_indices = [i[0] for i in sim_scores]
+    # Get the indices of the top N most similar products
+    top_indices = np.argpartition(-sim_scores, range(top_n + 1))[1:top_n + 1]
 
     # Fetch the product details for the recommended products
-    recommended_products = product_data.iloc[product_indices][
-        ['ProdID', 'Name', 'Brand', 'Category', 'ImageURL']].drop_duplicates(subset='ProdID')
+    recommended_products = product_data.iloc[top_indices][
+        ['ProdID', 'Name', 'Brand', 'Category', 'ImageURL']
+    ].drop_duplicates(subset='ProdID')
 
     return recommended_products
 
@@ -271,7 +266,7 @@ def View_Similar_Product():
         return render_template('main.html', message=message)
 
         # Call the recommendation function (ensure it handles invalid IDs)
-    Recommendations = recommend_content_based(product_id, product_data)
+    Recommendations = recommend_content_based(product_id, product_data,tfidf_matrix)
 
     if Recommendations.empty:
         # Handle the case where there are no recommendations
