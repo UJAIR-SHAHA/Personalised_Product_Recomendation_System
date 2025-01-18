@@ -7,7 +7,6 @@ from dotenv import load_dotenv
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
-
 # creating Flask App
 app = Flask(__name__)
 load_dotenv()
@@ -68,7 +67,7 @@ def truncate(text, length):
 
 
 # Function to search products based on a query
-def search_products(product_data, query, top_n=10):
+def search_products(data, query, top_n=10):
     # Transform the query using the same TF-IDF vectorizer
     query_tfidf = tfidf_vectorizer.transform([query])
 
@@ -79,24 +78,24 @@ def search_products(product_data, query, top_n=10):
     similar_product_indices = cosine_similarities.argsort()[:-top_n - 1:-1]
 
     # Get the top recommended products
-    recommended_products = product_data.iloc[similar_product_indices]
+    recommended_products = data.iloc[similar_product_indices]
 
     return recommended_products[['ProdID', 'Name', 'Brand', 'Category', 'ImageURL']].drop_duplicates(subset='ProdID')
 
 
-def recommend_content_based(product_id, product_data, tfidf_matrix, top_n=15):
+def recommend_content_based(product_id, data, tfidf_m, top_n=15):
     # Get the index of the product
-    idx = product_data[product_data['ProdID'] == product_id].index[0]
+    idx = data[data['ProdID'] == product_id].index[0]
 
     # Calculate cosine similarity for the target product with all others
-    target_vector = tfidf_matrix[idx]
+    target_vector = tfidf_m[idx]
     sim_scores = cosine_similarity(target_vector, tfidf_matrix).flatten()
 
     # Get the indices of the top N most similar products
     top_indices = np.argpartition(-sim_scores, range(top_n + 1))[1:top_n + 1]
 
     # Fetch the product details for the recommended products
-    recommended_products = product_data.iloc[top_indices][
+    recommended_products = data.iloc[top_indices][
         ['ProdID', 'Name', 'Brand', 'Category', 'ImageURL']
     ].drop_duplicates(subset='ProdID')
 
@@ -104,35 +103,21 @@ def recommend_content_based(product_id, product_data, tfidf_matrix, top_n=15):
 
 
 def user_based_recommendation(user_id, top_n=12):
-
     product_data['user_id'] = product_data['user_id'].astype(str)
-    user_item_matrix = product_data.pivot_table(index='user_id', columns='ProdID', values='Rating', fill_value=0)
-    user_similarity = cosine_similarity(user_item_matrix)
-    user_similarity_df = pd.DataFrame(user_similarity, index=user_item_matrix.index, columns=user_item_matrix.index)
+    user_item_mat = product_data.pivot_table(index='user_id', columns='ProdID', values='Rating', fill_value=0)
+    user_similarity = cosine_similarity(user_item_mat)
+    user_similarity_df = pd.DataFrame(user_similarity, index=user_item_mat.index, columns=user_item_mat.index)
 
-    user_item_matrix = product_data.pivot_table(index='user_id', columns='ProdID', values='Rating', fill_value=0)
-
-
-
-    # if user_id not in user_item_matrix.index:
-    #     print(f"user_id {user_id} not found in user_item_matrix")
-    # else:
-    #     print(f"user_id {user_id} found in user_item_matrix")
-    #
-    # print("Type of user_id in user_item_matrix:", type(user_item_matrix.index[0]))
-    # print("Type of user_id from session:", type(user_id))
-    # print("Ratings for user:", user_item_matrix.loc[user_id])
-    # Get the list of users that are most similar to the target user
     similar_users = user_similarity_df.loc[str(user_id)].sort_values(ascending=False)[1:].head(top_n)
 
     # Get ratings of similar users
-    similar_users_ratings = user_item_matrix.loc[similar_users.index]
+    similar_users_ratings = user_item_mat.loc[similar_users.index]
 
     # Predict ratings for the target user by averaging the ratings from similar users
     predicted_ratings = similar_users_ratings.T.dot(similar_users.values) / similar_users.values.sum()
 
     # Get the items the user has not rated yet
-    user_rated_items = user_item_matrix.loc[str(user_id)] > 0
+    user_rated_items = user_item_mat.loc[str(user_id)] > 0
     unrated_items = predicted_ratings[user_rated_items == False]
 
     # Sort unrated items by predicted rating
@@ -149,12 +134,7 @@ def user_based_recommendation(user_id, top_n=12):
 @app.route("/")
 @app.route('/index')
 def indexredirect():
-
     user_id = session.get('user_id')
-    # print(product_data['ProdID'].nunique())
-    # print(product_data['user_id'].nunique())
-
-
     if user_id:
         # Generate recommendations for the logged-in user
         recommended_products = user_based_recommendation(user_id)
@@ -179,14 +159,15 @@ def indexredirect():
 def login():
     if request.method == "POST":
         user_id = request.form.get("user_id")  # Get user ID from the form
-        if user_id in user_item_matrix.index:
+        password = request.form.get("password")
+        # password = str(password)  # Get user password from the form
+        if user_id in user_item_matrix.index and password == user_id:
             session["user_id"] = user_id
             # Redirect to index with user ID as a query parameter or session
             return redirect(url_for("indexredirect", user_id=user_id))
         else:
-            error_message = "Please enter a valid user ID."
+            error_message = "Please enter a valid user ID"
             return render_template("login.html", error_message=error_message)
-
     return render_template("login.html")
 
 
@@ -204,18 +185,6 @@ def main():
 
 @app.route("/recommendations", methods=['POST', 'GET'])
 def recommendations():
-    brand_image_map = {
-
-        "Dove": "static/img/Dove.png",
-        "COVERGIRL": "static/img/covergirl.png",
-        "Suave": "static/img/Suave.png",
-        "Love Beauty and Planet": "static/img/love beauty and planet.png",
-        "Vaseline": "static/img/Vaseline.png",
-        "Rusk": "static/img/Rusk.png",
-        "Axe": "static/img/Axe.png",
-        "BareMinerals": "static/img/BareMinerals.png"
-        # Add more brands and their corresponding image filenames here
-    }
 
     user_id = session.get("user_id")
 
@@ -243,19 +212,7 @@ def recommendations():
 
 
 @app.route("/View_Similar_Product")
-def View_Similar_Product():
-    brand_image_map = {
-
-        "Dove": "static/img/Dove.png",
-        "COVERGIRL": "static/img/covergirl.png",
-        "Suave": "static/img/Suave.png",
-        "Love Beauty and Planet": "static/img/love beauty and planet.png",
-        "Vaseline": "static/img/Vaseline.png",
-        "Rusk": "static/img/Rusk.png",
-        "Axe": "static/img/Axe.png",
-        "BareMinerals": "static/img/BareMinerals.png"
-        # Add more brands and their corresponding image filenames here
-    }
+def view_similar_product():
 
     user_id = session.get("user_id")
 
@@ -266,9 +223,9 @@ def View_Similar_Product():
         return render_template('main.html', message=message)
 
         # Call the recommendation function (ensure it handles invalid IDs)
-    Recommendations = recommend_content_based(product_id, product_data,tfidf_matrix)
+    similar_recommendations = recommend_content_based(product_id, product_data, tfidf_matrix)
 
-    if Recommendations.empty:
+    if similar_recommendations.empty:
         # Handle the case where there are no recommendations
         message = "No recommendations available for this product."
         return render_template('main.html', message=message)
@@ -276,10 +233,8 @@ def View_Similar_Product():
         # Process the recommendations
     random_product_image_urls_1 = [
         brand_image_map.get(product['Brand'], "static/img/img_1.png")
-        for _, product in Recommendations.iterrows()
+        for _, product in similar_recommendations.iterrows()
     ]
-    # print(Recommendations)
-    # print(random_product_image_urls_1)
 
     # Random prices (or replace with dynamic data)
     price = [40, 50, 60, 70, 100, 122, 106, 50, 30, 50]
@@ -287,7 +242,7 @@ def View_Similar_Product():
     # Return the rendered template with data
     return render_template(
         'similar_product.html', user_id=user_id,
-        recommended_products=Recommendations,
+        recommended_products=similar_recommendations,
         truncate=truncate,
         random_product_image_urls=random_product_image_urls_1,
         random_price=random.choice(price)
@@ -296,6 +251,4 @@ def View_Similar_Product():
 
 # Run the Flask app
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))  # Default to 5000 if PORT is not set
-    app.run(host="0.0.0.0", port=port)
-    app.run(debug=True)
+    app.run()

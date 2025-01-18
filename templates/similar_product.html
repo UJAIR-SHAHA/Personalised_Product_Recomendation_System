@@ -87,7 +87,7 @@
 
 
 {% if not recommended_products.empty %}
-<!--trending recommendations-->
+<!--Similar product recommendations-->
 <!-- Products -->
 <div class="container-fluid mt-10" style="padding:20px">
   <p class="text-center mb-10" style="  padding:20px; font-size:40px ;font-weight:bold; letter-spacing: 5px;">Available Similar Products</p>
@@ -95,9 +95,9 @@
     {% for index, product in recommended_products.iterrows() %}
     <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
       <div class="card rounded shadow custom-hover">
-          <img src = "{{ product['ImageURL'] }}" class="card-img-top img-fluid" alt="{{ product['Name'] }}" style="height: 300px; width: 100% object-fit: cover; ">
+          <img src = "{{ product['ImageURL'] }}" class="card-img-top img-fluid" alt="{{ product['Name'] }}" style="height: 200px; width: 100% object-fit: cover; ">
         <div class="card-body">
-          <h5 class="card-title" style="font-size:25px">{{ truncate(product['Name'],30) }}</h5>
+          <h5 class="card-title" style="font-size:25px">{{ truncate(product['Name'],20) }}</h5>
           <p class="card-text" style="font-size:20px">Brand: {{ product['Brand'] }}</p>
           <button type="button" class="btn btn-primary" style="font-size:20px" data-toggle="modal" data-target="#productModal{{ index }}">Buy Now</button>
             <button  type="submit" class="btn btn-primary" id="View_Similar_Product" style="font-size:20px"
@@ -108,9 +108,9 @@
     <!-- Modal -->
     <div class="modal fade" style="justify-content: center;" id="productModal{{ index }}" tabindex="-1" role="dialog" aria-labelledby="productModalLabel" aria-hidden="true">
       <div class="modal-dialog" style="justify-content: center;">
-        <div class="modal-content" style="width:700px">
+        <div class="modal-content" style="width:400px">
           <div class="modal-header">
-            <h4 class="modal-title" id="productModalLabel">{{ product['Name'] }}</h4>
+            <h5 class="modal-title" id="productModalLabel">{{ product['Name'] }}</h5>
             <button type="button" class="close" data-dismiss="modal" aria-label="Close">
               <span aria-hidden="true">&times;</span>
             </button>
@@ -118,9 +118,9 @@
           <div class="modal-body">
             <div class="row">
               <div class="col-md-6" style="padding-left:10px;">
-                  <img src="{{ product['ImageURL'] }}" class="img-fluid" alt="{{ product['Name'] }}" style="width: 300px; height:200px;">
+                  <img src="{{ product['ImageURL'] }}" class="img-fluid" alt="{{ product['Name'] }}" style="width: 200px; height:150px;">
               </div>
-              <div class="col-md-6" style="padding-left:20px; padding-bottom:20px; font-size:25px">
+              <div class="col-md-6" style="padding-left:20px; padding-bottom:20px; font-size:20px">
                 <p><strong>Brand:</strong> {{ product['Brand'] }}</p>
                 <!-- Add other product details here -->
                 <!-- Example: -->
@@ -130,9 +130,9 @@
               </div>
             </div>
           </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" style="font-size:20px" data-dismiss="modal">Close</button>
-            <button type="button" class="btn btn-primary" style="font-size:20px" >Add to Cart</button>
+          <div class="modal-footer" style="font-size:10px" >
+            <button type="button" class="btn btn-secondary"  data-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-primary">Add to Cart</button>
           </div>
         </div>
       </div>

@@ -69,14 +69,16 @@
         </div>
 
         <div class="col-lg-6 mb-5 mb-lg-0">
-          <div class="card" style="height:450px">
-            <div class="card-body  py-5 px-md-5" style="height:450px; width:auto">
+          <div class="card" style="height:auto; width:auto;">
+            <div class="card-body  py-5 px-md-5" style="height:auto;; width:auto">
               <h1 class="fw-bold text-center " style="font-size:60px; margin-bottom:90px">Login</h1>
-              <form action="/login" class="" method="POST" style="max-width: 500px; max-height: 500px;">
-            <div class="form-group" style="margin-bottom:30px">
+              <form action="/login" class="" method="POST" style="max-width: 500px; max-height: auto;">
+            <div class="form-group" style="margin-bottom:20px;">
 <!--                <label for="user_id">User ID</label>-->
-                <input type="text" id="user_id" name="user_id" class="form-control" placeholder="Enter your User ID" required>
+                <input type="text" id="user_id" name="user_id" class="form-control mb-2" placeholder="Enter your User ID" required>
+                <input type="password" id="password" name="password" class="form-control" placeholder="Enter your Password" required />
             </div>
+
             <button type="submit" class="btn btn-primary btn-block">Login</button>
         </form>
 
@@ -99,7 +101,7 @@
 
                 <!-- Register buttons -->
 
-              </form>
+<!--              </form>-->
             </div>
           </div>
         </div>
