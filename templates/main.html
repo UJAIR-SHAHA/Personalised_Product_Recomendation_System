@@ -67,7 +67,7 @@
   <p class="text-center mb-10" style="  padding:20px; font-size:40px ;font-weight:bold; letter-spacing: 5px;">Available Searched Products</p>
   <div class="row mt-7">
     {% for index, product in content_based_rec.iterrows() %}
-    <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+    <div class="col-lg-3 col-md-4 col-sm-6 mb-4" style="padding:10px">
       <div class="card rounded shadow custom-hover">
           <img src = "{{ product['ImageURL'] }}" class="card-img-top img-fluid" alt="{{ product['Name'] }}" style="height: 200px; width: 100% object-fit: cover; ">
         <div class="card-body">
