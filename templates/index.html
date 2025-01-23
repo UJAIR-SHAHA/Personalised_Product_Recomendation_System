@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Product Recommendation System</title>
+    <link rel="icon" href="https://img.icons8.com/material-outlined/24/shopping-cart--v1.png" type="image/png">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
@@ -85,10 +86,10 @@
           {% if index < trending_products.shape[0] %}
           <div class="col-lg-4 col-md-6 col-sm-12 mb-1" style="padding: 30px">
             <div class="card shadow custom-hover">
-              <img src="{{ random_product_image_urls[index] }}" class="card-img-top img-fluid" alt="{{ trending_products.iloc[index]['Name'] }}" style="height: 250px; width: auto; object-fit: cover;">
+              <img src="{{ trending_products.iloc[index]['imageUrl']}}" class="card-img-top img-fluid" alt="{{ trending_products.iloc[index]['product_name'] }}" style="height: 250px; width: auto; object-fit: cover;">
               <div class="card-body">
                 <h5 class="card-title" style="font-size: 20px">{{ truncate(trending_products.iloc[index]['product_name'], 30) }}</h5>
-                <p class="card-text" style="font-size: 15px">Brand: {{ trending_products.iloc[index]['product_brand'] }}</p>
+                <p class="card-text" style="font-size: 15px">Brand: {{ trending_products.iloc[index]['Brand'] }}</p>
                 <button type="button" class="btn btn-primary" style="font-size: 15px" data-toggle="modal" data-target="#productModal{{ index }}">Buy Now</button>
                 <button type="submit" class="btn btn-primary" style="font-size: 15px" onclick="viewSimilar('{{ trending_products.iloc[index]['product_id'] }}')">View Similar</button>
               </div>
@@ -107,15 +108,15 @@
           <div class="modal-body">
             <div class="row">
               <div class="col-md-6" style="padding-left:10px;">
-                  <img src="{{ random_product_image_urls[index] }}" class="img-fluid" alt="{{ truncate(trending_products.iloc[index]['product_name'], 60) }}" style="width: 300px; height:150px;">
+                  <img src="{{ trending_products.iloc[index]['imageUrl'] }}" class="img-fluid" alt="{{ truncate(trending_products.iloc[index]['product_name'], 60) }}" style="width: 300px; height:150px;">
               </div>
               <div class="col-md-6" style="padding-left:20px; padding-bottom:20px; font-size:15px">
-                <p><strong>Brand:</strong> {{ trending_products.iloc[index]['product_brand'] }}</p>
-                <p><strong>Rating:</strong> {{ trending_products.iloc[index]['avg_rating'] | round(1) }}</p>
-                <p><strong>Brand:</strong> {{ trending_products.iloc[index]['rating_count'] }}</p>
+                <p><strong>Brand:</strong> {{ trending_products.iloc[index]['Brand'] }}</p>
+                <p><strong>Category:</strong> {{ trending_products.iloc[index]['masterCategory'] }}</p>
+                <p><strong>Brand:</strong> {{ trending_products.iloc[index]['Brand'] }}</p>
                 <!-- Add other product details here -->
                 <!-- Example: -->
-                <p><strong>Price:</strong> {{ random_price }}</p>
+                <p><strong>Price: Rs</strong> {{ random_price }}</p>
                 <!-- Add more details as needed -->
               </div>
             </div>
@@ -155,10 +156,10 @@
     {% for index, product in recommended_products.iterrows() %}
     <div class="col-lg-3 col-md-4 col-sm-6 mb-4" style="padding: 20px">
       <div class="card rounded shadow custom-hover">
-          <img src="{{ product['ImageURL'] }}" class="card-img-top img-fluid" alt="{{ product['Name'] }}" style="height: 200px; width: 100% object-fit: cover; ">
+          <img src="{{ product['imageUrl'] }}" class="card-img-top img-fluid" alt="{{ product['product_name'] }}" style="height: 200px; width: 100% object-fit: cover; ">
         <div class="card-body">
-          <h5 class="card-title" style="font-size:20px">{{ truncate(product['Name'],10) }}</h5>
-<!--            <h5 class="card-title" style="font-size:25px">{{ truncate(product['product_id'],30) }}</h5>-->
+          <h5 class="card-title" style="font-size:20px">{{ truncate(product['product_name'],10) }}</h5>
+
           <p class="card-text" style="font-size:15px">Brand: {{ product['Brand'] }}</p>
           <button type="button" class="btn btn-primary" style="font-size:15px" data-toggle="modal" data-target="#productModal1{{ index }}">Buy Now</button>
             <button  type="submit" class="btn btn-primary" id="View_Similar_Product" style="font-size:15px"
@@ -171,7 +172,7 @@
       <div class="modal-dialog" style="justify-content: center;">
         <div class="modal-content" style="width:400px">
           <div class="modal-header">
-            <h5 class="modal-title" id="productModalLabel1">{{ product['Name'] }}</h5>
+            <h5 class="modal-title" id="productModalLabel1">{{ product['product_name'] }}</h5>
             <button type="button" class="close" data-dismiss="modal" aria-label="Close">
               <span aria-hidden="true">&times;</span>
             </button>
@@ -179,7 +180,7 @@
           <div class="modal-body">
             <div class="row">
               <div class="col-md-6" style="padding-left:10px;">
-                  <img src="{{ product['ImageURL'] }}" class="img-fluid" alt="{{ product['Name'] }}" style="width: 300px; height:150px;">
+                  <img src="{{ product['imageUrl'] }}" class="img-fluid" alt="{{ product['product_name'] }}" style="width: 300px; height:150px;">
               </div>
               <div class="col-md-6" style="padding-left:20px; padding-bottom:20px; font-size:20px">
                 <p><strong>Brand:</strong> {{ product['Brand'] }}</p>

@@ -4,7 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ecommerce Recommendation System</title>
+    <title>Product Recommendation System</title>
+    <link rel="icon" href="https://img.icons8.com/material-outlined/24/shopping-cart--v1.png" type="image/png">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
@@ -69,9 +70,9 @@
     {% for index, product in content_based_rec.iterrows() %}
     <div class="col-lg-3 col-md-4 col-sm-6 mb-4" style="padding:10px">
       <div class="card rounded shadow custom-hover">
-          <img src = "{{ product['ImageURL'] }}" class="card-img-top img-fluid" alt="{{ product['Name'] }}" style="height: 200px; width: 100% object-fit: cover; ">
+          <img src = "{{ product['imageUrl'] }}" class="card-img-top img-fluid" alt="{{ product['product_name'] }}" style="height: 200px; width: 100% object-fit: cover; ">
         <div class="card-body">
-          <h5 class="card-title" style="font-size:20px">{{ truncate(product['Name'],15) }}</h5>
+          <h5 class="card-title" style="font-size:20px">{{ truncate(product['product_name'],20) }}</h5>
           <p class="card-text" style="font-size:15px">Brand: {{ product['Brand'] }}</p>
           <button type="button" class="btn btn-primary" style="font-size:15px" data-toggle="modal" data-target="#productModal{{ index }}">Buy Now</button>
             <button  type="submit" class="btn btn-primary" id="View_Similar_Product" style="font-size:15px"
@@ -84,7 +85,7 @@
       <div class="modal-dialog" style="justify-content: center;">
         <div class="modal-content" style="width:400px">
           <div class="modal-header">
-            <h5 class="modal-title" id="productModalLabel">{{ product['Name'] }}</h5>
+            <h5 class="modal-title" id="productModalLabel">{{ product['product_name'] }}</h5>
             <button type="button" class="close" data-dismiss="modal" aria-label="Close">
               <span aria-hidden="true">&times;</span>
             </button>
@@ -92,13 +93,13 @@
           <div class="modal-body">
             <div class="row">
               <div class="col-md-6" style="padding-left:10px;">
-                  <img src="{{ product['ImageURL'] }}" class="img-fluid" alt="{{ product['Name'] }}" style="width: 200px; height:150px;">
+                  <img src="{{ product['imageUrl'] }}" class="img-fluid" alt="{{ product['product_name'] }}" style="width: 200px; height:150px;">
               </div>
               <div class="col-md-6" style="padding-left:20px; padding-bottom:20px; font-size:20px">
                 <p><strong>Brand:</strong> {{ product['Brand'] }}</p>
                 <!-- Add other product details here -->
                 <!-- Example: -->
-                <p><strong>Category:</strong> {{ product['Category'] }}</p>
+                <p><strong>Category:</strong> {{ product['masterCategory'] }}</p>
                 <p><strong>Price:</strong> {{ random_price }}</p>
                 <!-- Add more details as needed -->
               </div>
