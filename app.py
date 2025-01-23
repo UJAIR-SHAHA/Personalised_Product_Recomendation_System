@@ -113,9 +113,7 @@ def user_based_recommendation(user_id, model, user_mapping, product_mapping, dat
     Returns:
         pd.DataFrame: DataFrame containing the recommended products and their details.
     """
-    # Check if the user ID exists in the mapping
-    if user_id not in user_mapping:
-        raise ValueError(f"User ID '{user_id}' not found in the mapping.")
+    # Check if the user ID exists in the mappin
 
     # Get the mapped user index
     user_idx = user_mapping[user_id]
@@ -134,7 +132,7 @@ def user_based_recommendation(user_id, model, user_mapping, product_mapping, dat
     recommendations = list(zip(item_indices, predicted_ratings))
 
     # Sort recommendations by predicted rating in descending order
-    popular_recommendations = sorted(recommendations, key=lambda x: x[1], reverse=True)[:top_n]
+    recommendations = sorted(recommendations, key=lambda x: x[1], reverse=True)[:top_n]
 
     # Get the original item IDs from the item mapping
     recommended_item_ids = [list(product_mapping.keys())[list(product_mapping.values()).index(idx)] for idx, _ in
@@ -189,6 +187,8 @@ def login():
     if request.method == "POST":
         user_id = request.form.get("user_id")  # Get user ID from the form
         password = request.form.get("password")
+
+
         # password = str(password)  # Get user password from the form
         if user_id in user_mapping and password == user_id:
             session["user_id"] = user_id
