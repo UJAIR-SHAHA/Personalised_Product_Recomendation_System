@@ -19,6 +19,7 @@ app.secret_key = os.environ.get("FLASK_SECRET_KEY", "fallback_key_for_dev")
 product_data = pd.read_csv("models/final_fashion_data.csv")
 trending_products = pd.read_csv("models/Top_rated_fashion.csv")
 
+
 tfidf_vectorizer = TfidfVectorizer(stop_words='english')
 tfidf_matrix = tfidf_vectorizer.fit_transform(product_data['tags'])
 
@@ -98,8 +99,69 @@ def recommend_popular_items(top_n):
         ['product_id', 'product_name', 'Brand', 'masterCategory', 'imageUrl']
     ].drop_duplicates(subset='product_id')
 
+    print(type(recommended_products['product_id']))
+
     return recommended_products
 
+
+# def user_based_recommendation(user_id, model, user_mapping, product_mapping, data, top_n=10):
+#     """
+#     Recommend top-N items for a given user based on the trained model.
+#
+#     Parameters:
+#         user_id (str): The ID of the user for whom to recommend items.
+#         model (Model): The trained recommendation model.
+#         user_mapping (dict): A dictionary mapping user IDs to their integer indices.
+#         top_n (int): Number of recommendations to generate (default: 10).
+#     Returns:
+#         pd.DataFrame: DataFrame containing the recommended products and their details.
+#     """
+#     # Check if the user ID exists in the mapping
+#     if user_id not in user_mapping:
+#         raise ValueError(f"User ID '{user_id}' not found in the mapping.")
+#
+#     # Get the mapped user index
+#     user_idx = user_mapping[user_id]
+#
+#     # Prepare a list of all item indices
+#     item_indices = np.array(list(product_mapping.values()))
+#
+#     # Create inputs for the model: replicate the user index for all items
+#     user_input = np.full_like(item_indices, fill_value=user_idx, dtype=np.int32)
+#     item_input = item_indices
+#
+#     # Predict ratings for all items
+#     predicted_ratings = model.predict([user_input, item_input], verbose=0).flatten()
+#
+#     # Combine item indices and predicted ratings into a single array
+#     recommendations = list(zip(item_indices, predicted_ratings))
+#
+#     # Sort recommendations by predicted rating in descending order
+#     recommendations = sorted(recommendations, key=lambda x: x[1], reverse=True)[:top_n]
+#
+#     # Get the original item IDs from the item mapping
+#     recommended_item_ids = [list(product_mapping.keys())[list(product_mapping.values()).index(idx)] for idx, _ in
+#                             recommendations]
+#
+#     print(recommended_item_ids)
+#     recommended_item_ids = [int(item_id) for item_id in recommended_item_ids]
+#
+#     # Filter only recommended items that exist in product_data
+#     recommended_products = data[data['product_id'].isin(recommended_item_ids)]
+#
+#     print(data['product_id'].dtype)
+#
+#     # If some products are missing in product_data, display a warning or handle it
+#     if len(recommended_products) != top_n:
+#         missing_items = set(recommended_item_ids) - set(recommended_products['product_id'])
+#         print(type(missing_items))
+#         print(f"Warning: Missing items in product data: {missing_items}")
+#
+#     # Add predicted ratings to the recommendations
+#     recommended_products = recommended_products.copy()
+#     recommended_products['PredictedRating'] = [rating for _, rating in recommendations]
+#
+#     return recommended_products[['product_id', 'product_name', 'imageUrl', 'Brand']]
 
 def user_based_recommendation(user_id, model, user_mapping, product_mapping, data, top_n=10):
     """
@@ -109,11 +171,15 @@ def user_based_recommendation(user_id, model, user_mapping, product_mapping, dat
         user_id (str): The ID of the user for whom to recommend items.
         model (Model): The trained recommendation model.
         user_mapping (dict): A dictionary mapping user IDs to their integer indices.
+        product_mapping (dict): A dictionary mapping product IDs to integer indices.
+        data (pd.DataFrame): The product data, including product details.
         top_n (int): Number of recommendations to generate (default: 10).
     Returns:
         pd.DataFrame: DataFrame containing the recommended products and their details.
     """
-    # Check if the user ID exists in the mappin
+    # Ensure the user ID exists in the user mapping
+    if user_id not in user_mapping:
+        raise ValueError(f"User ID {user_id} not found in user mapping.")
 
     # Get the mapped user index
     user_idx = user_mapping[user_id]
@@ -125,34 +191,40 @@ def user_based_recommendation(user_id, model, user_mapping, product_mapping, dat
     user_input = np.full_like(item_indices, fill_value=user_idx, dtype=np.int32)
     item_input = item_indices
 
-    # Predict ratings for all items
+    # Predict ratings for all items (vectorized operation)
     predicted_ratings = model.predict([user_input, item_input], verbose=0).flatten()
 
-    # Combine item indices and predicted ratings into a single array
-    recommendations = list(zip(item_indices, predicted_ratings))
+    # Get top-N recommendations (vectorized sorting)
+    top_n_indices = np.argsort(predicted_ratings)[-top_n:][::-1]  # Get indices of top-N predictions
+    top_n_ratings = predicted_ratings[top_n_indices]
+    top_n_item_indices = item_indices[top_n_indices]
 
-    # Sort recommendations by predicted rating in descending order
-    recommendations = sorted(recommendations, key=lambda x: x[1], reverse=True)[:top_n]
-
-    # Get the original item IDs from the item mapping
-    recommended_item_ids = [list(product_mapping.keys())[list(product_mapping.values()).index(idx)] for idx, _ in
-                            recommendations]
-
-    print(recommended_item_ids)
+    # Map item indices back to product IDs using product_mapping
+    recommended_item_ids = [list(product_mapping.keys())[list(product_mapping.values()).index(idx)] for idx in top_n_item_indices]
     recommended_item_ids = [int(item_id) for item_id in recommended_item_ids]
+    # Filter only recommended items that exist in product_data (using efficient pandas filtering)
+    recommended_products = data[data['product_id'].isin(recommended_item_ids)].copy()
 
-    # Filter only recommended items that exist in product_data
-    recommended_products = data[data['product_id'].isin(recommended_item_ids)]
+    # print("Recommended Item IDs:", recommended_item_ids)
+    # print("Product IDs in recommended_products:", recommended_products['product_id'].tolist())
+    # print("Columns in recommended_products:", recommended_products.columns)
+    # print(recommended_products.head())
 
-    # If some products are missing in product_data, display a warning or handle it
+    print(type(recommended_item_ids[0]))
+    print(data['product_id'].dtype)
+
+    # Handle missing items in the product data
     if len(recommended_products) != top_n:
         missing_items = set(recommended_item_ids) - set(recommended_products['product_id'])
+        print(type(missing_items))
         print(f"Warning: Missing items in product data: {missing_items}")
 
     # Add predicted ratings to the recommendations
-    recommended_products = recommended_products.copy()
-    recommended_products['PredictedRating'] = [rating for _, rating in recommendations]
+    recommended_products['PredictedRating'] = top_n_ratings
 
+    recommended_products.head()
+
+    # Return a DataFrame with relevant product details
     return recommended_products[['product_id', 'product_name', 'imageUrl', 'Brand', 'PredictedRating']]
 
 
@@ -168,11 +240,6 @@ def indexredirect():
         # Default case if no user is logged in
         recommended_products = product_data.head(12)  # Fallback: Random products
 
-    # random_product_image_urls = [
-    #     brand_image_map.get(product['product_brand'], "static/img/img_1.png")
-    #     # Use a default image if brand is not in the map
-    #     for _, product in trending_products.iterrows()
-    # ]
     trending_items = recommend_popular_items(9)
 
     price = [400, 500, 600, 700, 1000, 1220, 1060, 5000, 3000, 4000]
@@ -187,8 +254,6 @@ def login():
     if request.method == "POST":
         user_id = request.form.get("user_id")  # Get user ID from the form
         password = request.form.get("password")
-
-
         # password = str(password)  # Get user password from the form
         if user_id in user_mapping and password == user_id:
             session["user_id"] = user_id
