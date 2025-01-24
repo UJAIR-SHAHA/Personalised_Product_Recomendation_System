@@ -9,15 +9,19 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 import tensorflow as tf
 import json
+from scipy.sparse.linalg import svds
 
 # creating Flask App
 app = Flask(__name__)
 load_dotenv()
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", "fallback_key_for_dev")
 
+
+
 # Loading Data
 product_data = pd.read_csv("models/final_fashion_data.csv")
 trending_products = pd.read_csv("models/Top_rated_fashion.csv")
+user_interaction = pd.read_csv("models/user_interaction_data.csv")
 
 
 tfidf_vectorizer = TfidfVectorizer(stop_words='english')
@@ -163,71 +167,136 @@ def recommend_popular_items(top_n):
 #
 #     return recommended_products[['product_id', 'product_name', 'imageUrl', 'Brand']]
 
-def user_based_recommendation(user_id, model, user_mapping, product_mapping, data, top_n=10):
-    """
-    Recommend top-N items for a given user based on the trained model.
 
-    Parameters:
-        user_id (str): The ID of the user for whom to recommend items.
-        model (Model): The trained recommendation model.
-        user_mapping (dict): A dictionary mapping user IDs to their integer indices.
-        product_mapping (dict): A dictionary mapping product IDs to integer indices.
-        data (pd.DataFrame): The product data, including product details.
-        top_n (int): Number of recommendations to generate (default: 10).
-    Returns:
-        pd.DataFrame: DataFrame containing the recommended products and their details.
+
+# def user_based_recommendation(user_id, model, user_mapping, product_mapping, data, top_n=10):
+#     """
+#     Recommend top-N items for a given user based on the trained model.
+#
+#     Parameters:
+#         user_id (str): The ID of the user for whom to recommend items.
+#         model (Model): The trained recommendation model.
+#         user_mapping (dict): A dictionary mapping user IDs to their integer indices.
+#         product_mapping (dict): A dictionary mapping product IDs to integer indices.
+#         data (pd.DataFrame): The product data, including product details.
+#         top_n (int): Number of recommendations to generate (default: 10).
+#     Returns:
+#         pd.DataFrame: DataFrame containing the recommended products and their details.
+#     """
+#     # Ensure the user ID exists in the user mapping
+#     if user_id not in user_mapping:
+#         raise ValueError(f"User ID {user_id} not found in user mapping.")
+#
+#     # Get the mapped user index
+#     user_idx = user_mapping[user_id]
+#
+#     # Prepare a list of all item indices
+#     item_indices = np.array(list(product_mapping.values()))
+#
+#     # Create inputs for the model: replicate the user index for all items
+#     user_input = np.full_like(item_indices, fill_value=user_idx, dtype=np.int32)
+#     item_input = item_indices
+#
+#     # Predict ratings for all items (vectorized operation)
+#     predicted_ratings = model.predict([user_input, item_input], verbose=0).flatten()
+#
+#     # Get top-N recommendations (vectorized sorting)
+#     top_n_indices = np.argsort(predicted_ratings)[-top_n:][::-1]  # Get indices of top-N predictions
+#     top_n_ratings = predicted_ratings[top_n_indices]
+#     top_n_item_indices = item_indices[top_n_indices]
+#
+#     # Map item indices back to product IDs using product_mapping
+#     recommended_item_ids = [list(product_mapping.keys())[list(product_mapping.values()).index(idx)] for idx in top_n_item_indices]
+#     recommended_item_ids = [int(item_id) for item_id in recommended_item_ids]
+#     # Filter only recommended items that exist in product_data (using efficient pandas filtering)
+#     recommended_products = data[data['product_id'].isin(recommended_item_ids)].copy()
+#
+#     # print("Recommended Item IDs:", recommended_item_ids)
+#     # print("Product IDs in recommended_products:", recommended_products['product_id'].tolist())
+#     # print("Columns in recommended_products:", recommended_products.columns)
+#     # print(recommended_products.head())
+#
+#     print(type(recommended_item_ids[0]))
+#     print(data['product_id'].dtype)
+#
+#     # Handle missing items in the product data
+#     if len(recommended_products) != top_n:
+#         missing_items = set(recommended_item_ids) - set(recommended_products['product_id'])
+#         print(type(missing_items))
+#         print(f"Warning: Missing items in product data: {missing_items}")
+#
+#     # Add predicted ratings to the recommendations
+#     recommended_products['PredictedRating'] = top_n_ratings
+#
+#     recommended_products.head()
+#
+#     # Return a DataFrame with relevant product details
+#     return recommended_products[['product_id', 'product_name', 'imageUrl', 'Brand', 'PredictedRating']]
+
+def svd_recommendation(user_id, user_item_matrix, user_mapping, product_mapping, data, top_n=10):
+    """
+    Recommend top-N items for a given user using SVD.
     """
     # Ensure the user ID exists in the user mapping
     if user_id not in user_mapping:
         raise ValueError(f"User ID {user_id} not found in user mapping.")
 
-    # Get the mapped user index
+    # Map user and product IDs to their integer indices
     user_idx = user_mapping[user_id]
+    product_indices = np.array(list(product_mapping.values()))
 
-    # Prepare a list of all item indices
-    item_indices = np.array(list(product_mapping.values()))
+    # Convert interactions to a user-item matrix (efficiently)
+    user_item_matrix = user_item_matrix.to_numpy()
 
-    # Create inputs for the model: replicate the user index for all items
-    user_input = np.full_like(item_indices, fill_value=user_idx, dtype=np.int32)
-    item_input = item_indices
+    # Apply SVD (we only need the U and Vt matrices for the target user)
+    U, sigma, Vt = svds(user_item_matrix, k=50)  # Use k latent features
+    sigma = np.diag(sigma)  # Convert sigma to a diagonal matrix
 
-    # Predict ratings for all items (vectorized operation)
-    predicted_ratings = model.predict([user_input, item_input], verbose=0).flatten()
+    # Directly compute predicted ratings for the target user (no need to compute for all users)
+    user_latent_vector = U[user_idx, :]  # Get the specific latent vector for the user
+    predicted_ratings = np.dot(user_latent_vector, np.dot(sigma, Vt))
 
-    # Get top-N recommendations (vectorized sorting)
-    top_n_indices = np.argsort(predicted_ratings)[-top_n:][::-1]  # Get indices of top-N predictions
-    top_n_ratings = predicted_ratings[top_n_indices]
-    top_n_item_indices = item_indices[top_n_indices]
+    # Get the top-N recommendations using numpy's argsort for efficient sorting
+    top_n_indices = np.argsort(predicted_ratings)[-top_n:][::-1]
+    top_n_item_indices = product_indices[top_n_indices]
 
-    # Map item indices back to product IDs using product_mapping
-    recommended_item_ids = [list(product_mapping.keys())[list(product_mapping.values()).index(idx)] for idx in top_n_item_indices]
+    # Map item indices back to product IDs (optimized using dictionary lookup)
+    recommended_item_ids = [pid for idx in top_n_item_indices for pid, pid_idx in product_mapping.items() if pid_idx == idx]
     recommended_item_ids = [int(item_id) for item_id in recommended_item_ids]
-    # Filter only recommended items that exist in product_data (using efficient pandas filtering)
+
+    # Ensure the data['product_id'] column is of type int32 for efficient comparison
+    data['product_id'] = data['product_id'].astype('int32')
+
+    print(data['product_id'].dtypes)
+    print(type(recommended_item_ids))
+
+
+    # Filter only recommended items that exist in product_data (optimized with `isin`)
     recommended_products = data[data['product_id'].isin(recommended_item_ids)].copy()
 
-    # print("Recommended Item IDs:", recommended_item_ids)
-    # print("Product IDs in recommended_products:", recommended_products['product_id'].tolist())
-    # print("Columns in recommended_products:", recommended_products.columns)
-    # print(recommended_products.head())
-
-    print(type(recommended_item_ids[0]))
-    print(data['product_id'].dtype)
+    # Check if any products were found
+    if recommended_products.empty:
+        print("No matching products found in the dataset!")
+        return pd.DataFrame()  # Return empty DataFrame if no products found
 
     # Handle missing items in the product data
-    if len(recommended_products) != top_n:
-        missing_items = set(recommended_item_ids) - set(recommended_products['product_id'])
-        print(type(missing_items))
+    missing_items = set(recommended_item_ids) - set(recommended_products['product_id'])
+    if missing_items:
         print(f"Warning: Missing items in product data: {missing_items}")
 
-    # Add predicted ratings to the recommendations
-    recommended_products['PredictedRating'] = top_n_ratings
+    # Generate predicted ratings for the recommended products efficiently
+    # No need for an explicit loop, use `map` for vectorized operation
+    filtered_ratings = [predicted_ratings[product_mapping[pid]] if pid in product_mapping else np.nan for pid in recommended_item_ids]
 
-    recommended_products.head()
+    # Add predicted ratings to the recommendations
+    recommended_products['PredictedRating'] = filtered_ratings
 
     # Return a DataFrame with relevant product details
     return recommended_products[['product_id', 'product_name', 'imageUrl', 'Brand', 'PredictedRating']]
 
-
+@app.before_request
+def make_session_permanent():
+    session.permanent = False
 # Flask route for the index_page (First Page)
 @app.route("/")
 @app.route('/index')
@@ -235,7 +304,7 @@ def indexredirect():
     user_id = session.get('user_id')
     if user_id:
         # Generate recommendations for the logged-in user
-        recommended_products = user_based_recommendation(user_id, model, user_mapping, product_mapping, product_data)
+        recommended_products = svd_recommendation(user_id, user_item_matrix, user_mapping, product_mapping, product_data)
     else:
         # Default case if no user is logged in
         recommended_products = product_data.head(12)  # Fallback: Random products
