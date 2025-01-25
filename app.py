@@ -10,18 +10,13 @@ from sklearn.metrics.pairwise import cosine_similarity
 import tensorflow as tf
 import json
 from scipy.sparse.linalg import svds
-import signal
 import threading
-import time
-from scipy.sparse import csr_matrix
 
 
 # creating Flask App
 app = Flask(__name__)
 load_dotenv()
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", "fallback_key_for_dev")
-
-
 
 # Loading Data
 product_data = pd.read_csv("models/final_fashion_data.csv")
@@ -104,19 +99,19 @@ def recommend_content_based(product_id, data, tfidf_m, top_n=15):
 def recommend_popular_items(top_n):
     top_indices = trending_products.nlargest(top_n, "popularity_score").index
 
-    recommended_products = product_data.iloc[top_indices][
+    recommended_popular_products = product_data.iloc[top_indices][
         ['product_id', 'product_name', 'Brand', 'masterCategory', 'imageUrl']
     ].drop_duplicates(subset='product_id')
 
-    print(type(recommended_products['product_id']))
+    # print(type(recommended_popular_products['product_id']))
 
-    return recommended_products
+    return recommended_popular_products
 
 
 def user_based_recommendation(user_id,  top_n=12):
 
-    product_data['user_id'] = product_data['user_id'].astype(str)
-    user_item_mat = product_data.pivot_table(index='user_id', columns='ProdID', values='Rating', fill_value=0)
+    user_interaction['user_id'] = user_interaction['user_id'].astype(str)
+    user_item_mat = user_interaction.pivot_table(index='user_id', columns='product_id', values='rating', fill_value=0)
     user_similarity = cosine_similarity(user_item_mat)
     user_similarity_df = pd.DataFrame(user_similarity, index=user_item_mat.index, columns=user_item_mat.index)
     similar_users = user_similarity_df.loc[str(user_id)].sort_values(ascending=False)[1:].head(top_n)
@@ -130,8 +125,8 @@ def user_based_recommendation(user_id,  top_n=12):
     # Sort unrated items by predicted rating
     recommended_items = unrated_items.sort_values(ascending=False).head(top_n)
     # Fetch product details for the recommended items
-    recommended_product_details = product_data[product_data['ProdID'].isin(recommended_items.index)][
-        ['product_id', 'product_ame', 'Brand', 'imageUrl']].drop_duplicates(subset='product_id')
+    recommended_product_details = product_data[product_data['product_id'].isin(recommended_items.index)][
+        ['product_id', 'product_name', 'Brand', 'imageUrl']].drop_duplicates(subset='product_id')
     return recommended_product_details
 
 
@@ -194,24 +189,23 @@ def user_based_recommendation(user_id,  top_n=12):
 #
 #     return recommended_products[['product_id', 'product_name', 'imageUrl', 'Brand']]
 
-def svd_recommendation(user_id, user_item_matrix, user_mapping, product_mapping, data, top_n=12):
+def svd_recommendation(user_id, user_item_mat, user_map, product_map, data, top_n=12):
     """
     Recommend top-N items for a given user using SVD.
     """
     # Ensure the user ID exists in the user mapping
-    if user_id not in user_mapping:
+    if user_id not in user_map:
         raise ValueError(f"User ID {user_id} not found in user mapping.")
 
     # Map user and product IDs to their integer indices
-    user_idx = user_mapping[user_id]
-    product_indices = np.array(list(product_mapping.values()))
+    user_idx = user_map[user_id]
+    product_indices = np.array(list(product_map.values()))
 
     # Convert interactions to a user-item matrix (efficiently)
-    user_item_matrix = user_item_matrix.to_numpy()
-    user_item_matrix = csr_matrix(user_item_matrix)
+    user_item_mat = user_item_mat.to_numpy()
 
     # Apply SVD (we only need the U and Vt matrices for the target user)
-    U, sigma, Vt = svds(user_item_matrix, k=5)  # Use k latent features
+    U, sigma, Vt = svds(user_item_mat, k=5)  # Use k latent features
     sigma = np.diag(sigma)  # Convert sigma to a diagonal matrix
 
     # Directly compute predicted ratings for the target user (no need to compute for all users)
@@ -223,7 +217,7 @@ def svd_recommendation(user_id, user_item_matrix, user_mapping, product_mapping,
     top_n_item_indices = product_indices[top_n_indices]
 
     # Map item indices back to product IDs (optimized using dictionary lookup)
-    recommended_item_ids = [pid for idx in top_n_item_indices for pid, pid_idx in product_mapping.items() if pid_idx == idx]
+    recommended_item_ids = [pid for idx in top_n_item_indices for pid, pid_idx in product_map.items() if pid_idx == idx]
     recommended_item_ids = [int(item_id) for item_id in recommended_item_ids]
 
     # Ensure the data['product_id'] column is of type int32 for efficient comparison
@@ -232,8 +226,7 @@ def svd_recommendation(user_id, user_item_matrix, user_mapping, product_mapping,
     print(data['product_id'].dtypes)
     print(type(recommended_item_ids))
 
-
-    # Filter only recommended items that exist in product_data (optimized with `isin`)
+    # Filter only recommended items that exist in product_data
     recommended_products = data[data['product_id'].isin(recommended_item_ids)].copy()
 
     # Check if any products were found
@@ -248,7 +241,8 @@ def svd_recommendation(user_id, user_item_matrix, user_mapping, product_mapping,
 
     # Generate predicted ratings for the recommended products efficiently
     # No need for an explicit loop, use `map` for vectorized operation
-    filtered_ratings = [predicted_ratings[product_mapping[pid]] if pid in product_mapping else np.nan for pid in recommended_item_ids]
+    filtered_ratings = [predicted_ratings[product_map[pid]] if pid in product_map
+                        else np.nan for pid in recommended_item_ids]
 
     # Add predicted ratings to the recommendations
     recommended_products['PredictedRating'] = filtered_ratings
@@ -256,10 +250,13 @@ def svd_recommendation(user_id, user_item_matrix, user_mapping, product_mapping,
     # Return a DataFrame with relevant product details
     return recommended_products[['product_id', 'product_name', 'imageUrl', 'Brand', 'PredictedRating']]
 
+
 @app.before_request
 def make_session_permanent():
     session.permanent = False
 # Flask route for the index_page (First Page)
+
+
 @app.route("/")
 @app.route('/index')
 def indexredirect():
@@ -267,12 +264,10 @@ def indexredirect():
     user_id = session.get('user_id')
     recommended_products = None
 
-
-
     def timeout_handler():
         raise Exception("Operation timed out!")
 
-    def handler(user_id, user_item_matrix, user_mapping, product_mapping, product_data):
+    def handler(user_id, product_data):
         # Start a timer that will trigger the timeout_handler after 5 seconds
         timer = threading.Timer(10, timeout_handler)  # 5-second timeout
         timer.start()
@@ -282,7 +277,7 @@ def indexredirect():
         try:
             # Try to fetch recommendations using svd_recommendation
             # recommendation_products = svd_recommendation(user_id, user_item_matrix, user_mapping, product_mapping, product_data)
-            recommendation_products = svd_recommendation(user_id)
+            recommendation_products = user_based_recommendation(user_id)
 
         except MemoryError as mem_err:
             print("Memory error: Out of memory!")
@@ -293,7 +288,7 @@ def indexredirect():
             print("SVD recommendation took too long. Falling back to random products.")
             # Fallback to random products if an exception occurs
             error_message = "SVD recommendation took too long. Falling back to random products."
-            recommendation_products = product_data.head(12)
+            recommendation_products = product_data.sample(12)
         finally:
             # Always cancel the timer when the operation finishes (either successfully or due to timeout)
             timer.cancel()
@@ -302,8 +297,7 @@ def indexredirect():
 
     if user_id:
         try:
-            recommended_products, error_message = handler(user_id, user_item_matrix, user_mapping, product_mapping,
-                                                          product_data)
+            recommended_products, error_message = handler(user_id, user_item_matrix)
         except Exception as e:
             # General exception handling for the entire block
             print(f"An error occurred in the indexredirect function: {e}")
