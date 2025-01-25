@@ -10,6 +10,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 import tensorflow as tf
 import json
 from scipy.sparse.linalg import svds
+import signal
 
 # creating Flask App
 app = Flask(__name__)
@@ -249,7 +250,7 @@ def svd_recommendation(user_id, user_item_matrix, user_mapping, product_mapping,
     user_item_matrix = user_item_matrix.to_numpy()
 
     # Apply SVD (we only need the U and Vt matrices for the target user)
-    U, sigma, Vt = svds(user_item_matrix, k=50)  # Use k latent features
+    U, sigma, Vt = svds(user_item_matrix, k=5)  # Use k latent features
     sigma = np.diag(sigma)  # Convert sigma to a diagonal matrix
 
     # Directly compute predicted ratings for the target user (no need to compute for all users)
@@ -305,25 +306,23 @@ def indexredirect():
     recommended_products = None
     error_message = None
 
-    try:
-        if user_id:
-            # Attempt to generate recommendations for the logged-in user
-            recommended_products = svd_recommendation(user_id, user_item_matrix, user_mapping, product_mapping,
-                                                      product_data)
+    class TimeoutException(Exception):
+        pass
 
-            # If no recommendations are found (empty DataFrame), fall back to default
-            if recommended_products.empty:
-                error_message = "No item suggestions found. Showing random items."
-                recommended_products = product_data.sample(12)  # Random fallback items
-        else:
-            # No user logged in, show default random products
-            error_message = "No user logged in. Showing random items."
-            recommended_products = product_data.sample(12)
-    except Exception as e:
-        # Handle any errors during the recommendation process
-        print(f"Error during SVD recommendation: {e}")
-        error_message = "No item suggestions found due to an error. Showing random items."
-        recommended_products = product_data.sample(12)  # Random fallback items
+    def handler(signum, frame):
+        raise TimeoutException()
+
+    signal.signal(signal.SIGALRM, handler)
+    signal.alarm(10)  # Set a 10-second timeout for the recommendation
+
+    try:
+        recommended_products = svd_recommendation(user_id, user_item_matrix, user_mapping, product_mapping,
+                                                  product_data)
+    except TimeoutException:
+        print("SVD recommendation took too long. Falling back to random products.")
+        recommended_products = product_data.head(12)
+    finally:
+        signal.alarm(0)  # Random fallback items
 
     # Generate trending items
     trending_items = recommend_popular_items(9)
