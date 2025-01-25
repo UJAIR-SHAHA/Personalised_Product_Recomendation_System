@@ -60,7 +60,7 @@ def truncate(text, length):
 
 
 # Function to search products based on a query
-def search_products(data, query, top_n=10):
+def search_products(data, query, top_n=12):
     # Transform the query using the same TF-IDF vectorizer
     query_tfidf = tfidf_vectorizer.transform([query])
 
@@ -77,7 +77,7 @@ def search_products(data, query, top_n=10):
         subset='product_id')
 
 
-def recommend_content_based(product_id, data, tfidf_m, top_n=15):
+def recommend_content_based(product_id, data, tfidf_m, top_n=16):
     # Get the index of the product
     product_id = int(product_id)
     idx = data[data['product_id'] == product_id].index[0]
@@ -309,7 +309,7 @@ def indexredirect():
         recommended_products = product_data.head(12)  # Fallback to random products
 
     # Generate trending items
-    trending_items = recommend_popular_items(9)
+    trending_items = recommend_popular_items(12)
 
     # Define random prices
     price = [400, 500, 600, 700, 1000, 1220, 1060, 5000, 3000, 4000]
