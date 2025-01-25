@@ -13,6 +13,8 @@ from scipy.sparse.linalg import svds
 import signal
 import threading
 import time
+from scipy.sparse import csr_matrix
+
 
 # creating Flask App
 app = Flask(__name__)
@@ -111,6 +113,28 @@ def recommend_popular_items(top_n):
     return recommended_products
 
 
+def user_based_recommendation(user_id,  top_n=12):
+
+    product_data['user_id'] = product_data['user_id'].astype(str)
+    user_item_mat = product_data.pivot_table(index='user_id', columns='ProdID', values='Rating', fill_value=0)
+    user_similarity = cosine_similarity(user_item_mat)
+    user_similarity_df = pd.DataFrame(user_similarity, index=user_item_mat.index, columns=user_item_mat.index)
+    similar_users = user_similarity_df.loc[str(user_id)].sort_values(ascending=False)[1:].head(top_n)
+    # Get ratings of similar users
+    similar_users_ratings = user_item_mat.loc[similar_users.index]
+    # Predict ratings for the target user by averaging the ratings from similar users
+    predicted_ratings = similar_users_ratings.T.dot(similar_users.values) / similar_users.values.sum()
+    # Get the items the user has not rated yet
+    user_rated_items = user_item_mat.loc[str(user_id)] > 0
+    unrated_items = predicted_ratings[user_rated_items == False]
+    # Sort unrated items by predicted rating
+    recommended_items = unrated_items.sort_values(ascending=False).head(top_n)
+    # Fetch product details for the recommended items
+    recommended_product_details = product_data[product_data['ProdID'].isin(recommended_items.index)][
+        ['product_id', 'product_ame', 'Brand', 'imageUrl']].drop_duplicates(subset='product_id')
+    return recommended_product_details
+
+
 # def user_based_recommendation(user_id, model, user_mapping, product_mapping, data, top_n=10):
 #     """
 #     Recommend top-N items for a given user based on the trained model.
@@ -184,6 +208,7 @@ def svd_recommendation(user_id, user_item_matrix, user_mapping, product_mapping,
 
     # Convert interactions to a user-item matrix (efficiently)
     user_item_matrix = user_item_matrix.to_numpy()
+    user_item_matrix = csr_matrix(user_item_matrix)
 
     # Apply SVD (we only need the U and Vt matrices for the target user)
     U, sigma, Vt = svds(user_item_matrix, k=5)  # Use k latent features
@@ -256,7 +281,8 @@ def indexredirect():
 
         try:
             # Try to fetch recommendations using svd_recommendation
-            recommendation_products = svd_recommendation(user_id, user_item_matrix, user_mapping, product_mapping, product_data)
+            # recommendation_products = svd_recommendation(user_id, user_item_matrix, user_mapping, product_mapping, product_data)
+            recommendation_products = svd_recommendation(user_id)
 
         except MemoryError as mem_err:
             print("Memory error: Out of memory!")
