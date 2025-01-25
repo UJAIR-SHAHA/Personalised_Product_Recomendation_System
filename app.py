@@ -11,6 +11,8 @@ import tensorflow as tf
 import json
 from scipy.sparse.linalg import svds
 import signal
+import threading
+import time
 
 # creating Flask App
 app = Flask(__name__)
@@ -168,72 +170,6 @@ def recommend_popular_items(top_n):
 #
 #     return recommended_products[['product_id', 'product_name', 'imageUrl', 'Brand']]
 
-
-
-# def user_based_recommendation(user_id, model, user_mapping, product_mapping, data, top_n=10):
-#     """
-#     Recommend top-N items for a given user based on the trained model.
-#
-#     Parameters:
-#         user_id (str): The ID of the user for whom to recommend items.
-#         model (Model): The trained recommendation model.
-#         user_mapping (dict): A dictionary mapping user IDs to their integer indices.
-#         product_mapping (dict): A dictionary mapping product IDs to integer indices.
-#         data (pd.DataFrame): The product data, including product details.
-#         top_n (int): Number of recommendations to generate (default: 10).
-#     Returns:
-#         pd.DataFrame: DataFrame containing the recommended products and their details.
-#     """
-#     # Ensure the user ID exists in the user mapping
-#     if user_id not in user_mapping:
-#         raise ValueError(f"User ID {user_id} not found in user mapping.")
-#
-#     # Get the mapped user index
-#     user_idx = user_mapping[user_id]
-#
-#     # Prepare a list of all item indices
-#     item_indices = np.array(list(product_mapping.values()))
-#
-#     # Create inputs for the model: replicate the user index for all items
-#     user_input = np.full_like(item_indices, fill_value=user_idx, dtype=np.int32)
-#     item_input = item_indices
-#
-#     # Predict ratings for all items (vectorized operation)
-#     predicted_ratings = model.predict([user_input, item_input], verbose=0).flatten()
-#
-#     # Get top-N recommendations (vectorized sorting)
-#     top_n_indices = np.argsort(predicted_ratings)[-top_n:][::-1]  # Get indices of top-N predictions
-#     top_n_ratings = predicted_ratings[top_n_indices]
-#     top_n_item_indices = item_indices[top_n_indices]
-#
-#     # Map item indices back to product IDs using product_mapping
-#     recommended_item_ids = [list(product_mapping.keys())[list(product_mapping.values()).index(idx)] for idx in top_n_item_indices]
-#     recommended_item_ids = [int(item_id) for item_id in recommended_item_ids]
-#     # Filter only recommended items that exist in product_data (using efficient pandas filtering)
-#     recommended_products = data[data['product_id'].isin(recommended_item_ids)].copy()
-#
-#     # print("Recommended Item IDs:", recommended_item_ids)
-#     # print("Product IDs in recommended_products:", recommended_products['product_id'].tolist())
-#     # print("Columns in recommended_products:", recommended_products.columns)
-#     # print(recommended_products.head())
-#
-#     print(type(recommended_item_ids[0]))
-#     print(data['product_id'].dtype)
-#
-#     # Handle missing items in the product data
-#     if len(recommended_products) != top_n:
-#         missing_items = set(recommended_item_ids) - set(recommended_products['product_id'])
-#         print(type(missing_items))
-#         print(f"Warning: Missing items in product data: {missing_items}")
-#
-#     # Add predicted ratings to the recommendations
-#     recommended_products['PredictedRating'] = top_n_ratings
-#
-#     recommended_products.head()
-#
-#     # Return a DataFrame with relevant product details
-#     return recommended_products[['product_id', 'product_name', 'imageUrl', 'Brand', 'PredictedRating']]
-
 def svd_recommendation(user_id, user_item_matrix, user_mapping, product_mapping, data, top_n=12):
     """
     Recommend top-N items for a given user using SVD.
@@ -295,34 +231,56 @@ def svd_recommendation(user_id, user_item_matrix, user_mapping, product_mapping,
     # Return a DataFrame with relevant product details
     return recommended_products[['product_id', 'product_name', 'imageUrl', 'Brand', 'PredictedRating']]
 
-@app.before_request
-def make_session_permanent():
-    session.permanent = False
 # Flask route for the index_page (First Page)
 @app.route("/")
 @app.route('/index')
 def indexredirect():
+
     user_id = session.get('user_id')
-    recommended_products = None
     error_message = None
 
-    class TimeoutException(Exception):
-        pass
+    # class TimeoutException(Exception):
+    #     pass
+    #
+    # def handler(signum, frame):
+    #     raise TimeoutException()
+    #
+    # signal.signal(signal.SIGALRM, handler)
+    # signal.alarm(10)  # Set a 10-second timeout for the recommendation
+    #
+    # try:
+    #     recommended_products = svd_recommendation(user_id, user_item_matrix, user_mapping, product_mapping,
+    #                                               product_data)
+    # except TimeoutException:
+    #     print("SVD recommendation took too long. Falling back to random products.")
+    #     recommended_products = product_data.head(12)
+    # finally:
+    #     signal.alarm(0)  # Random fallback items
 
-    def handler(signum, frame):
-        raise TimeoutException()
+    def timeout_handler():
+        raise Exception("Operation timed out!")
 
-    signal.signal(signal.SIGALRM, handler)
-    signal.alarm(10)  # Set a 10-second timeout for the recommendation
+    def handler(user_id, user_item_matrix, user_mapping, product_mapping, product_data):
+        # Start a timer that will trigger the timeout_handler after 5 seconds
+        timer = threading.Timer(5, timeout_handler)  # 5-second timeout
+        timer.start()
 
-    try:
-        recommended_products = svd_recommendation(user_id, user_item_matrix, user_mapping, product_mapping,
-                                                  product_data)
-    except TimeoutException:
-        print("SVD recommendation took too long. Falling back to random products.")
-        recommended_products = product_data.head(12)
-    finally:
-        signal.alarm(0)  # Random fallback items
+        try:
+            # Try to fetch recommendations using svd_recommendation
+            recommended_products = svd_recommendation(user_id, user_item_matrix, user_mapping, product_mapping,
+                                                      product_data)
+        except Exception as e:
+            print("SVD recommendation took too long. Falling back to random products.")
+            # Fallback to random products if an exception occurs
+            recommended_products = product_data.head(12)
+        finally:
+            # Always cancel the timer when the operation finishes (either successfully or due to timeout)
+            timer.cancel()
+
+        return recommended_products
+
+    recommended_products = handler(user_id, user_item_matrix, user_mapping, product_mapping,
+                                                          product_data)
 
     # Generate trending items
     trending_items = recommend_popular_items(9)
