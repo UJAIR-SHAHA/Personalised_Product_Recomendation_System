@@ -231,56 +231,49 @@ def svd_recommendation(user_id, user_item_matrix, user_mapping, product_mapping,
     # Return a DataFrame with relevant product details
     return recommended_products[['product_id', 'product_name', 'imageUrl', 'Brand', 'PredictedRating']]
 
+@app.before_request
+def make_session_permanent():
+    session.permanent = False
 # Flask route for the index_page (First Page)
 @app.route("/")
 @app.route('/index')
 def indexredirect():
 
     user_id = session.get('user_id')
-    error_message = None
+    recommended_products = None
 
-    # class TimeoutException(Exception):
-    #     pass
-    #
-    # def handler(signum, frame):
-    #     raise TimeoutException()
-    #
-    # signal.signal(signal.SIGALRM, handler)
-    # signal.alarm(10)  # Set a 10-second timeout for the recommendation
-    #
-    # try:
-    #     recommended_products = svd_recommendation(user_id, user_item_matrix, user_mapping, product_mapping,
-    #                                               product_data)
-    # except TimeoutException:
-    #     print("SVD recommendation took too long. Falling back to random products.")
-    #     recommended_products = product_data.head(12)
-    # finally:
-    #     signal.alarm(0)  # Random fallback items
+
 
     def timeout_handler():
         raise Exception("Operation timed out!")
 
     def handler(user_id, user_item_matrix, user_mapping, product_mapping, product_data):
         # Start a timer that will trigger the timeout_handler after 5 seconds
-        timer = threading.Timer(5, timeout_handler)  # 5-second timeout
+        timer = threading.Timer(25, timeout_handler)  # 5-second timeout
         timer.start()
+
+        error_message = None
 
         try:
             # Try to fetch recommendations using svd_recommendation
-            recommended_products = svd_recommendation(user_id, user_item_matrix, user_mapping, product_mapping,
+            recommendation_products = svd_recommendation(user_id, user_item_matrix, user_mapping, product_mapping,
                                                       product_data)
         except Exception as e:
             print("SVD recommendation took too long. Falling back to random products.")
             # Fallback to random products if an exception occurs
-            recommended_products = product_data.head(12)
+            error_message = "SVD recommendation took too long. Falling back to random products."
+            recommendation_products = product_data.head(12)
         finally:
             # Always cancel the timer when the operation finishes (either successfully or due to timeout)
             timer.cancel()
 
-        return recommended_products
+        return recommendation_products, error_message
 
-    recommended_products = handler(user_id, user_item_matrix, user_mapping, product_mapping,
-                                                          product_data)
+    if user_id:
+        recommended_products, error_message = handler(user_id, user_item_matrix, user_mapping, product_mapping,
+                                                      product_data)
+    else:
+        error_message = "User not logged in."
 
     # Generate trending items
     trending_items = recommend_popular_items(9)
@@ -293,7 +286,7 @@ def indexredirect():
         'index.html',
         user_id=user_id,
         trending_products=trending_items,
-        recommended_products=recommended_products.head(12),
+        recommended_products=recommended_products,
         error_message=error_message,  # Pass the error message to the template
         truncate=truncate,
         random_price=random.choice(price)
