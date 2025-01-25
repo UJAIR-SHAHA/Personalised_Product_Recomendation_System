@@ -249,15 +249,20 @@ def indexredirect():
 
     def handler(user_id, user_item_matrix, user_mapping, product_mapping, product_data):
         # Start a timer that will trigger the timeout_handler after 5 seconds
-        timer = threading.Timer(25, timeout_handler)  # 5-second timeout
+        timer = threading.Timer(10, timeout_handler)  # 5-second timeout
         timer.start()
 
         error_message = None
 
         try:
             # Try to fetch recommendations using svd_recommendation
-            recommendation_products = svd_recommendation(user_id, user_item_matrix, user_mapping, product_mapping,
-                                                      product_data)
+            recommendation_products = svd_recommendation(user_id, user_item_matrix, user_mapping, product_mapping, product_data)
+
+        except MemoryError as mem_err:
+            print("Memory error: Out of memory!")
+            error_message = "Memory error occurred during recommendation calculation."
+            recommendation_products = product_data.head(12)
+
         except Exception as e:
             print("SVD recommendation took too long. Falling back to random products.")
             # Fallback to random products if an exception occurs
@@ -270,10 +275,17 @@ def indexredirect():
         return recommendation_products, error_message
 
     if user_id:
-        recommended_products, error_message = handler(user_id, user_item_matrix, user_mapping, product_mapping,
-                                                      product_data)
+        try:
+            recommended_products, error_message = handler(user_id, user_item_matrix, user_mapping, product_mapping,
+                                                          product_data)
+        except Exception as e:
+            # General exception handling for the entire block
+            print(f"An error occurred in the indexredirect function: {e}")
+            error_message = f"An unexpected error occurred: {e}"
+            recommended_products = product_data.head(12)  # Fallback to random products
     else:
         error_message = "User not logged in."
+        recommended_products = product_data.head(12)  # Fallback to random products
 
     # Generate trending items
     trending_items = recommend_popular_items(9)
