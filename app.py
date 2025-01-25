@@ -22,7 +22,7 @@ app.secret_key = os.environ.get("FLASK_SECRET_KEY", "fallback_key_for_dev")
 product_data = pd.read_csv("models/final_fashion_data.csv")
 trending_products = pd.read_csv("models/Top_rated_fashion.csv")
 user_interaction = pd.read_csv("models/user_interaction_data.csv")
-subset_user_interaction = user_interaction.sample(frac=0.1, random_state=42)
+subset_user_interaction = user_interaction.sample(frac=0.05, random_state=42)
 
 
 tfidf_vectorizer = TfidfVectorizer(stop_words='english')
@@ -277,8 +277,9 @@ def indexredirect():
 
         try:
             # Try to fetch recommendations using svd_recommendation
-            # recommendation_products = svd_recommendation(user_id, user_item_matrix, user_mapping, product_mapping, product_data)
-            recommendation_products = user_based_recommendation(user_id, subset_user_interaction)
+            # recommendation_products = svd_recommendation(user_id, user_item_matrix,
+            # user_mapping, product_mapping, product_data)
+            recommendation_products = product_data.sample(12,random_state=int(hash(str(user_id))) % 1000)
 
         except MemoryError as mem_err:
             print("Memory error: Out of memory!")
@@ -298,7 +299,7 @@ def indexredirect():
 
     if user_id:
         try:
-            recommended_products, error_message = handler(user_id, user_item_matrix)
+            recommended_products, error_message = handler(user_id, product_data)
         except Exception as e:
             # General exception handling for the entire block
             print(f"An error occurred in the indexredirect function: {e}")
