@@ -233,7 +233,7 @@ def recommend_popular_items(top_n):
 #     # Return a DataFrame with relevant product details
 #     return recommended_products[['product_id', 'product_name', 'imageUrl', 'Brand', 'PredictedRating']]
 
-def svd_recommendation(user_id, user_item_matrix, user_mapping, product_mapping, data, top_n=10):
+def svd_recommendation(user_id, user_item_matrix, user_mapping, product_mapping, data, top_n=12):
     """
     Recommend top-N items for a given user using SVD.
     """
@@ -302,19 +302,45 @@ def make_session_permanent():
 @app.route('/index')
 def indexredirect():
     user_id = session.get('user_id')
-    if user_id:
-        # Generate recommendations for the logged-in user
-        recommended_products = svd_recommendation(user_id, user_item_matrix, user_mapping, product_mapping, product_data)
-    else:
-        # Default case if no user is logged in
-        recommended_products = product_data.head(12)  # Fallback: Random products
+    recommended_products = None
+    error_message = None
 
+    try:
+        if user_id:
+            # Attempt to generate recommendations for the logged-in user
+            recommended_products = svd_recommendation(user_id, user_item_matrix, user_mapping, product_mapping,
+                                                      product_data)
+
+            # If no recommendations are found (empty DataFrame), fall back to default
+            if recommended_products.empty:
+                error_message = "No item suggestions found. Showing random items."
+                recommended_products = product_data.sample(12)  # Random fallback items
+        else:
+            # No user logged in, show default random products
+            error_message = "No user logged in. Showing random items."
+            recommended_products = product_data.sample(12)
+    except Exception as e:
+        # Handle any errors during the recommendation process
+        print(f"Error during SVD recommendation: {e}")
+        error_message = "No item suggestions found due to an error. Showing random items."
+        recommended_products = product_data.sample(12)  # Random fallback items
+
+    # Generate trending items
     trending_items = recommend_popular_items(9)
 
+    # Define random prices
     price = [400, 500, 600, 700, 1000, 1220, 1060, 5000, 3000, 4000]
-    return render_template('index.html', user_id=user_id, trending_products=trending_items,
-                           recommended_products=recommended_products.head(12), truncate=truncate,
-                           random_price=random.choice(price))
+
+    # Render the index template
+    return render_template(
+        'index.html',
+        user_id=user_id,
+        trending_products=trending_items,
+        recommended_products=recommended_products.head(12),
+        error_message=error_message,  # Pass the error message to the template
+        truncate=truncate,
+        random_price=random.choice(price)
+    )
 
 
 # Flask route for the login_page
