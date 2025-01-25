@@ -22,6 +22,7 @@ app.secret_key = os.environ.get("FLASK_SECRET_KEY", "fallback_key_for_dev")
 product_data = pd.read_csv("models/final_fashion_data.csv")
 trending_products = pd.read_csv("models/Top_rated_fashion.csv")
 user_interaction = pd.read_csv("models/user_interaction_data.csv")
+subset_user_interaction = user_interaction.sample(frac=0.1, random_state=42)
 
 
 tfidf_vectorizer = TfidfVectorizer(stop_words='english')
@@ -108,7 +109,7 @@ def recommend_popular_items(top_n):
     return recommended_popular_products
 
 
-def user_based_recommendation(user_id,  top_n=12):
+def user_based_recommendation(user_id, user_interaction, top_n=12):
 
     user_interaction['user_id'] = user_interaction['user_id'].astype(str)
     user_item_mat = user_interaction.pivot_table(index='user_id', columns='product_id', values='rating', fill_value=0)
@@ -277,7 +278,7 @@ def indexredirect():
         try:
             # Try to fetch recommendations using svd_recommendation
             # recommendation_products = svd_recommendation(user_id, user_item_matrix, user_mapping, product_mapping, product_data)
-            recommendation_products = user_based_recommendation(user_id)
+            recommendation_products = user_based_recommendation(user_id, subset_user_interaction)
 
         except MemoryError as mem_err:
             print("Memory error: Out of memory!")
