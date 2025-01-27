@@ -28,9 +28,6 @@ subset_user_interaction = user_interaction.sample(frac=0.05, random_state=42)
 tfidf_vectorizer = TfidfVectorizer(stop_words='english')
 tfidf_matrix = tfidf_vectorizer.fit_transform(product_data['tags'])
 
-# Generate user-item matrix (assuming product_data contains user-product interactions)
-# user_item_matrix = product_data.pivot_table(index='user_id', columns='ProdID', values='Rating', fill_value=0)
-
 with open('models/user_item_matrix.pickle', 'rb') as file:
     user_item_matrix = pickle.load(file)
 
@@ -42,15 +39,8 @@ with open('models/user_mapping.json', 'rb') as file:
 with open('models/product_mapping.json', 'rb') as file:
     product_mapping = json.load(file)
 
-# product_data.head()
-
-
 # List of Prices
 prices = [200, 300, 100, 70, 90, 450, 800, 500]
-
-
-# function
-
 
 def truncate(text, length):
     if len(text) > length:
@@ -63,13 +53,10 @@ def truncate(text, length):
 def search_products(data, query, top_n=12):
     # Transform the query using the same TF-IDF vectorizer
     query_tfidf = tfidf_vectorizer.transform([query])
-
     # Compute cosine similarity between the query and product descriptions
     cosine_similarities = cosine_similarity(query_tfidf, tfidf_matrix).flatten()
-
     # Get indices of the most similar products
     similar_product_indices = cosine_similarities.argsort()[:-top_n - 1:-1]
-
     # Get the top recommended products
     recommended_products = data.iloc[similar_product_indices]
 
@@ -93,7 +80,6 @@ def recommend_content_based(product_id, data, tfidf_m, top_n=16):
     recommended_products = data.iloc[top_indices][
         ['product_id', 'product_name', 'Brand', 'masterCategory', 'imageUrl']
     ].drop_duplicates(subset='product_id')
-
     return recommended_products
 
 
@@ -103,15 +89,12 @@ def recommend_popular_items(top_n):
     recommended_popular_products = product_data.iloc[top_indices][
         ['product_id', 'product_name', 'Brand', 'masterCategory', 'imageUrl']
     ].drop_duplicates(subset='product_id')
-
-    # print(type(recommended_popular_products['product_id']))
-
     return recommended_popular_products
 
 
-def user_based_recommendation(user_id, user_interaction, top_n=12):
+def user_based_recommendation(user_id, user_interaction_data, top_n=12):
 
-    user_interaction['user_id'] = user_interaction['user_id'].astype(str)
+    user_interaction_data['user_id'] = user_interaction_data['user_id'].astype(str)
     user_item_mat = user_interaction.pivot_table(index='user_id', columns='product_id', values='rating', fill_value=0)
     user_similarity = cosine_similarity(user_item_mat)
     user_similarity_df = pd.DataFrame(user_similarity, index=user_item_mat.index, columns=user_item_mat.index)
@@ -131,7 +114,7 @@ def user_based_recommendation(user_id, user_interaction, top_n=12):
     return recommended_product_details
 
 
-# def user_based_recommendation(user_id, model, user_mapping, product_mapping, data, top_n=10):
+# def model_based_recommendation(user_id, model, user_mapping, product_mapping, data, top_n=10):
 #     """
 #     Recommend top-N items for a given user based on the trained model.
 #
@@ -220,13 +203,8 @@ def svd_recommendation(user_id, user_item_mat, user_map, product_map, data, top_
     # Map item indices back to product IDs (optimized using dictionary lookup)
     recommended_item_ids = [pid for idx in top_n_item_indices for pid, pid_idx in product_map.items() if pid_idx == idx]
     recommended_item_ids = [int(item_id) for item_id in recommended_item_ids]
-
     # Ensure the data['product_id'] column is of type int32 for efficient comparison
     data['product_id'] = data['product_id'].astype('int32')
-
-    print(data['product_id'].dtypes)
-    print(type(recommended_item_ids))
-
     # Filter only recommended items that exist in product_data
     recommended_products = data[data['product_id'].isin(recommended_item_ids)].copy()
 
@@ -241,7 +219,6 @@ def svd_recommendation(user_id, user_item_mat, user_map, product_map, data, top_
         print(f"Warning: Missing items in product data: {missing_items}")
 
     # Generate predicted ratings for the recommended products efficiently
-    # No need for an explicit loop, use `map` for vectorized operation
     filtered_ratings = [predicted_ratings[product_map[pid]] if pid in product_map
                         else np.nan for pid in recommended_item_ids]
 
@@ -255,9 +232,8 @@ def svd_recommendation(user_id, user_item_mat, user_map, product_map, data, top_
 @app.before_request
 def make_session_permanent():
     session.permanent = False
+
 # Flask route for the index_page (First Page)
-
-
 @app.route("/")
 @app.route('/index')
 def indexredirect():
@@ -276,7 +252,6 @@ def indexredirect():
         error_message = None
 
         try:
-            # Try to fetch recommendations using svd_recommendation
             # recommendation_products = svd_recommendation(user_id, user_item_matrix,
             # user_mapping, product_mapping, product_data)
             recommendation_products = product_data.sample(12,random_state=int(hash(str(user_id))) % 1000)
@@ -361,25 +336,17 @@ def recommendations():
     user_id = session.get("user_id")
 
     if request.method == 'POST':
-        prod = request.form.get('prod')
-        content_based_rec = search_products(product_data, prod, top_n=10)
+        search_query = request.form.get('search_query')
+        content_based_rec = search_products(product_data, search_query, top_n=12)
 
         if content_based_rec.empty:
             message = "No recommendations available for this product."
             return render_template('main.html', message=message)
+
         else:
-            # Create a list of random image URLs for each recommended product
-            # random_product_image_urls_1 = [
-            #     brand_image_map.get(product['Brand'], "static/img/img_1.png")
-            #     # Use a default image if brand is not in the map
-            #     for _, product in content_based_rec.iterrows()
-            # ]
-            print(content_based_rec)
-            # print(random_product_image_urls_1)
 
             price = [400, 500, 600, 700, 1000, 1220, 1060, 5000, 3000, 4000]
             return render_template('main.html', user_id=user_id, content_based_rec=content_based_rec, truncate=truncate,
-
                                    random_price=random.choice(price))
 
 
@@ -400,12 +367,6 @@ def view_similar_product():
         # Handle the case where there are no recommendations
         message = "No recommendations available for this product."
         return render_template('main.html', message=message)
-
-        # Process the recommendations
-    # random_product_image_urls_1 = [
-    #     brand_image_map.get(product['Brand'], "static/img/img_1.png")
-    #     for _, product in similar_recommendations.iterrows()
-    # ]
 
     # Random prices (or replace with dynamic data)
     price = [400, 500, 600, 700, 1000, 1220, 1060, 5000, 3000, 4000]
