@@ -1,7 +1,7 @@
 # Personalised_Product_Recomendation_System
 
 ## Overview
-This project is a **Product Recommendation System** designed to provide users with personalized shopping experiences. It integrates **user-based** and **content-based recommendation techniques** to suggest relevant products based on user interactions and preferences. The system is implemented as a **web application** using **Flask**.
+This project is a **Product Recommendation System** designed to provide users with personalized shopping experiences. It integrates **user-based** and **content-based recommendation techniques** along with a **deep learning model** for product recommendation, to suggest relevant products based on user interactions and preferences. The system is implemented as a **web application** using **Flask**.
 
 ---
 
@@ -101,10 +101,9 @@ project-directory/
 ---
 
 ## Future Enhancements
-1. Integrate additional recommendation techniques (e.g., deep learning models).
-2. Expand product categories and data sources.
-3. Include user feedback for improving recommendations.
-4. Implement real-time data updates.
+1. Expand product categories and data sources.
+2. Include user feedback for improving recommendations.
+3. Implement real-time data updates.
 
 ---
 
