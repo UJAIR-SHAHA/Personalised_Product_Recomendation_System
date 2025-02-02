@@ -86,7 +86,7 @@ def recommend_content_based(product_id, data, tfidf_m, top_n=16):
 def recommend_popular_items(top_n):
     top_indices = trending_products.nlargest(top_n, "popularity_score").index
 
-    recommended_popular_products = product_data.iloc[top_indices][
+    recommended_popular_products = product_data.iloc[[i for i in top_indices if i != 2]][
         ['product_id', 'product_name', 'Brand', 'masterCategory', 'imageUrl']
     ].drop_duplicates(subset='product_id')
     return recommended_popular_products
@@ -285,7 +285,7 @@ def indexredirect():
         recommended_products = product_data.head(12)  # Fallback to random products
 
     # Generate trending items
-    trending_items = recommend_popular_items(12)
+    trending_items = recommend_popular_items(13)
 
     # Define random prices
     price = [400, 500, 600, 700, 1000, 1220, 1060, 5000, 3000, 4000]
