@@ -49,21 +49,10 @@ background-color:lightgrey !important;
       display: none;
     }
 
-
-  .navbar {
-      width: 80%; /* Adjust the percentage or use a fixed width like '500px' */
-      margin: 0 auto; /* Center the navbar */
-      background-color: white;
-      color: white;
-      padding: 10px;
-      display: flex;
-      justify-content: space-around;
-      box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
-    }
-
-
     .container1 {
-    padding 30px;
+    max-width: 95%;
+    margin:0 auto;
+
     width:auto;
     }
 
@@ -74,7 +63,7 @@ background-color:lightgrey !important;
             object-fit: cover; /* Ensure the video covers the entire container */
         }
         .nav-link:hover {
-            color: orange !important; /* Change text color on hover */
+            color: lightgrey !important; /* Change text color on hover */
         }
         .nav-link.btn {
             border-radius: 5px; /* Add rounded corners to buttons */

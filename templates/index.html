@@ -17,42 +17,11 @@
 </head>
 <body>
 
-<!-- Navbar -->
-<nav class=" navbar navbar-expand-lg navbar-dark bg-dark text-white" style=" width:auto; height:auto;">
-  <h1 class=" navbar-brand mx-auto" style="webkit-text-size-adjust:100%; font-size:20px; font-weight: bold">Product Recommendation System</h1>
-  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-    <span class="navbar-toggler-icon"></span>
-  </button>
-  <div class="collapse navbar-collapse justify-content-end text-white" id="navbarNav">
-    <ul class="navbar-nav">
-      <li class="nav-item active">
-        <a class="nav-link" style="font-size:20px" href="#"><i class="fas fa-home"></i> Home</a>
-      </li>
+{% include 'navbar.html' %}
 
-      <li class="nav-item active">
-        <a class="nav-link" style="font-size:20px" href="#" id="settingsLink"><i class="fas fa-cog"></i> Settings</a>
-      </li>
-
-        <li class="nav-item active">
-           {% if user_id %}
-        <a class="nav-link " style="font-size:20px " href="{{ url_for('logout') }}" id="Logout"><i class="fas fa-sign-out-alt"></i> Log Out</a>
-          {% else %}
-          <a class="nav-link " style="font-size:20px" href="{{ url_for('login') }}" id="Login"><i class="fas fa-sign-in-alt"></i> Log In</a>
-          {% endif %}
-      </li>
-
-<!--      <li class="nav-item">-->
-<!--        <a class="nav-link btn btn-outline-primary mr-2" style="font-size:25px" href="#" data-toggle="modal" data-target="#signupModal">Sign Up</a>-->
-<!--      </li>-->
-<!--      <li class="nav-item">-->
-<!--        <a class="nav-link btn btn-primary" style="font-size:25px"  href="#" data-toggle="modal" data-target="#signinModal">Sign In</a>-->
-<!--      </li>-->
-    </ul>
-  </div>
-</nav>
+<img src="static/img/sales_50.jpg" style="height:500px; width:100%; " >
 
 <div class="container1" style="width:auto; padding:auto; margin-top:20px">
-<!--        <h1 class="text-center mb-4">Welcome to the Main Page</h1>-->
         {% if user_id %}
         <p class="text-center" style="font-size:30px">Logged in as: <strong>{{ user_id }}</strong></p>
         {% else %}
@@ -63,7 +32,7 @@
 
 
 <!-- Search Bar -->
-<div class="container1 text-center" style="margin-top:30px; width:auto; padding:40px;">
+<div class="container1 text-center" style="margin-top:30px; width:auto;">
     <form action="/recommendations" method="post" style="display:flex;">
             <input type="text" class="form-control mr-2" style="  padding:10px; font-size:20px ;font-weight:bold; letter-spacing: 2px;" name="search_query" placeholder="Search for products...">
             <button class="btn btn-primary" id="search">Search</button>
@@ -75,7 +44,7 @@
 
 
 <!--Trending Product recommendation-->
-<div class="container1 mt-10" style="padding: 20px; width:auto;">
+<div class="container1 mt-10">
   <p class="text-center mb-10" style="padding: 20px; font-size: 35px; font-weight: bold; letter-spacing: 3px;">Trending Products </p>
   <div id="trendingCarousel" class="carousel slide" data-ride="carousel" data-interval="2000">
     <div class="carousel-inner">
@@ -84,7 +53,7 @@
         <div class="row">
           {% for index in range(group_index, group_index + 3) %}
           {% if index < trending_products.shape[0] %}
-          <div class="col-lg-4 col-md-6 col-sm-12 mb-1" style="padding: 30px; height:400px">
+          <div class="col-lg-4 col-md-6 col-sm-12 mb-1" style="height:400px">
             <div class="card shadow custom-hover">
               <img src="{{ trending_products.iloc[index]['imageUrl']}}" class="card-img-top img-fluid" alt="{{ trending_products.iloc[index]['product_name'] }}" style="height: 200px; width: auto; object-fit: cover;">
               <div class="card-body">
@@ -149,54 +118,11 @@
 {% if user_id and recommended_products.shape[0] > 0 %}
 <!--Suggested for user recommendations-->
 <!-- Products -->
-<div class="container1 mt-10" style="padding:40px">
-  <p class="text-center mb-10" style="  padding:10px; font-size:40px ;font-weight:bold; letter-spacing: 3px;">Suggested For You</p>
+<div class="container1 mt-10">
+  <p class="text-center mb-10" style=" font-size:40px ;font-weight:bold; letter-spacing: 3px;">Suggested For You</p>
   <div class="row mt-7">
     {% for index, product in recommended_products.iterrows() %}
-    <div class="col-lg-3 col-md-4 col-sm-6 mb-4" style="padding: 20px">
-      <div class="card rounded shadow custom-hover">
-          <img src="{{ product['imageUrl'] }}" class="card-img-top img-fluid" alt="{{ product['product_name'] }}" style="height: 200px; width: 100% object-fit: cover; ">
-        <div class="card-body">
-          <h5 class="card-title" style="font-size:20px">{{truncate(product['product_name'],15) }}</h5>
-
-          <p class="card-text" style="font-size:15px">Brand: {{ product['Brand'] }}</p>
-          <button type="button" class="btn btn-primary" style="font-size:15px" data-toggle="modal" data-target="#productModal1{{ index }}">Buy Now</button>
-            <button  type="submit" class="btn btn-primary" id="View_Similar_Product" style="font-size:15px"
-            onclick="viewSimilar('{{ product['product_id'] }}')">View Similar </button>
-        </div>
-      </div>
-    </div>
-    <!-- Modal -->
-    <div class="modal fade" style="justify-content: center;" id="productModal1{{ index }}" tabindex="-1" role="dialog" aria-labelledby="productModalLabel" aria-hidden="true">
-      <div class="modal-dialog" style="justify-content: center;">
-        <div class="modal-content" style="width:400px">
-          <div class="modal-header">
-            <h5 class="modal-title" id="productModalLabel1">{{ product['product_name'] }}</h5>
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-              <span aria-hidden="true">&times;</span>
-            </button>
-          </div>
-          <div class="modal-body">
-            <div class="row">
-              <div class="col-md-6" style="padding-left:10px;">
-                  <img src="{{ product['imageUrl'] }}" class="img-fluid" alt="{{ product['product_name'] }}" style="width: 300px; height:150px;">
-              </div>
-              <div class="col-md-6" style="padding-left:20px; padding-bottom:20px; font-size:20px">
-                <p><strong>Brand:</strong> {{ product['Brand'] }}</p>
-                <!-- Add other product details here -->
-                <!-- Example: -->
-                <p><strong>Price:</strong> {{ random_price }}</p>
-                <!-- Add more details as needed -->
-              </div>
-            </div>
-          </div>
-          <div class="modal-footer" style="font-size:10px">
-            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-            <button type="button" class="btn btn-primary"  >Add to Cart</button>
-          </div>
-        </div>
-      </div>
-    </div>
+        {% include 'item_card.html' %}
     {% endfor %}
   </div>
 </div>
@@ -207,125 +133,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 
-<script>
-  // Handle click on Settings link to open the modal
-  document.getElementById('settingsLink').addEventListener('click', function() {
-    $('#settingsModal').modal('show');
-  });
-
-  // Handle theme apply button click
-  document.getElementById('applyTheme').addEventListener('click', function() {
-    // Get the selected theme value
-    var selectedTheme = document.querySelector('input[name="theme"]:checked').value;
-
-    // Apply the selected theme
-    if (selectedTheme === 'black') {
-      document.body.style.backgroundColor = 'black';
-      document.body.style.color = 'white';
-    } else if (selectedTheme === 'green') {
-      document.body.style.backgroundColor = 'green';
-      document.body.style.color = 'white';
-    } else {
-      // Default theme
-      document.body.style.backgroundColor = '#f8f9fa';
-      document.body.style.color = 'black';
-    }
-
-    // Close the modal
-    $('#settingsModal').modal('hide');
-  });
-
-  // Handle zoom in button click
-  document.getElementById('zoomIn').addEventListener('click', function() {
-    document.body.style.zoom = "115%";
-  });
-
-  // Handle zoom out button click
-  document.getElementById('zoomOut').addEventListener('click', function() {
-    document.body.style.zoom = "100%";
-  });
-</script>
-
-
-
-<!--footer-->
-
-<!--<div class="container my-5">-->
-
-  <footer class="footer-container bg-dark text-center text-white mt-1">
-  <!-- Grid container -->
-  <div class="footer-container">
-    <!-- Section: Social media -->
-    <section class="footer-container">
-      <!-- Facebook -->
-      <a
-        class="btn btn-primary btn-floating m-1"
-        style="background-color: #3b5998;"
-        href="#!"
-        role="button"
-        ><i class="fab fa-facebook-f"></i
-      ></a>
-
-      <!-- Twitter -->
-      <a
-        class="btn btn-primary btn-floating m-1"
-        style="background-color: #55acee;"
-        href="#!"
-        role="button"
-        ><i class="fab fa-twitter"></i
-      ></a>
-
-      <!-- Google -->
-      <a
-        class="btn btn-primary btn-floating m-1"
-        style="background-color: #dd4b39;"
-        href="#!"
-        role="button"
-        ><i class="fab fa-google"></i
-      ></a>
-
-      <!-- Instagram -->
-      <a
-        class="btn btn-primary btn-floating m-1"
-        style="background-color: #ac2bac;"
-        href="#!"
-        role="button"
-        ><i class="fab fa-instagram"></i
-      ></a>
-
-      <!-- Linkedin -->
-      <a
-        class="btn btn-primary btn-floating m-1"
-        style="background-color: #0082ca;"
-        href="https://www.linkedin.com/in/ujair-shaha-1b258a205/"
-        role="button"
-        ><i class="fab fa-linkedin-in"></i
-      ></a>
-      <!-- Github -->
-      <a
-        class="btn btn-primary btn-floating m-1"
-        style="background-color: #333333;"
-        href="#"
-        role="button"
-        ><i class="fab fa-github"></i
-      ></a>
-    </section>
-    <!-- Section: Social media -->
-  </div>
-  <!-- Grid container -->
-
-  <!-- Copyright -->
-  <div class="footer-container text-center" style="font-size:auto; background-color: rgba(0, 0, 0, 0.2);">
-    © 2025 Copyright:
-    <a class="text-white" href="#">Ecommerce Recommendation System by Uzair </a>
-  </div>
-  <!-- Copyright -->
-</footer>
-
-<!--</div>-->
-<!-- End of .container -->
-
-
+{% include 'footer.html' %}
 
 </body>
 </html>

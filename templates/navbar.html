@@ -1,0 +1,34 @@
+<nav class=" navbar navbar-expand-lg navbar-dark bg-dark text-white fixed-top" style=" width:auto; height:auto;">
+  <h1 class=" navbar-brand mx-auto" style="webkit-text-size-adjust:100%; font-size:30px; font-weight: bold">Product Recommendation System</h1>
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+  <div class="collapse navbar-collapse justify-content-end text-white" id="navbarNav">
+    <ul class="navbar-nav" style="font-size:30px">
+      <li class="nav-item active">
+        <a class="nav-link" href="index"><i class="fas fa-home"></i> Home</a>
+      </li>
+
+      <li class="nav-item active">
+        <a class="nav-link"  href="#" id="settingsLink"><i class="fas fa-cog"></i> Settings</a>
+      </li>
+
+        <li class="nav-item active">
+           {% if user_id %}
+        <a class="nav-link "  href="{{ url_for('logout') }}" id="Logout"><i class="fas fa-sign-out-alt"></i> Log Out</a>
+          {% else %}
+          <a class="nav-link " href="{{ url_for('login') }}" id="Login"><i class="fas fa-sign-in-alt"></i> Log In</a>
+          {% endif %}
+      </li>
+
+<!--      <li class="nav-item">-->
+<!--        <a class="nav-link btn btn-outline-primary mr-2" style="font-size:25px" href="#" data-toggle="modal" data-target="#signupModal">Sign Up</a>-->
+<!--      </li>-->
+<!--      <li class="nav-item">-->
+<!--        <a class="nav-link btn btn-primary" style="font-size:25px"  href="#" data-toggle="modal" data-target="#signinModal">Sign In</a>-->
+<!--      </li>-->
+    </ul>
+  </div>
+</nav>
+
+<div style="height:50px"></div>
